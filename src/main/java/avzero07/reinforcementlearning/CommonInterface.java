@@ -5,7 +5,7 @@ import java.io.IOException;
 
 /**
  * Common Interface for both the NeuralNet (NN) and LookUp Table (LUT) Interfaces.
- * @Date: 18-October-2019
+ * @date 18-October-2019
  * @author avzero07 (Akshay V)
  * @email akshay.viswakumar@gmail.com
  * @version 0.0.7

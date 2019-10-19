@@ -10,11 +10,19 @@ import java.util.concurrent.ThreadLocalRandom;
  * @date 18-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.9
+ * @version 0.0.91
  */
 
 /*
 Changelog
+---------------
+Version 0.0.91
+---------------
+- Added 1D array fields to NeuralNet
+    -- intermediateOutput   : for storing the output at hidden layer
+    -- finalOutput          : for storing the output at output layer
+- Implemented compOut() method
+    -- Performs forward propagation
 ---------------
 Version 0.0.9
 ---------------
@@ -51,6 +59,8 @@ public class NeuralNet implements NeuralNetInterface{
     int argNumOutputs;
     double[][] weightsInput;
     double[][] weightsOutput;
+    double[] intermediateOutput;  //Will store the intermediate outputs for a given input pattern
+    double[] finalOutput;         //Will store the final outputs for a given input pattern
     double argLearningRate;
     double argMomentum;
     double argA;
@@ -70,6 +80,9 @@ public class NeuralNet implements NeuralNetInterface{
 
         this.weightsInput = new double[this.argNumInputs+1][this.argNumHidden];
         this.weightsOutput = new double[this.argNumHidden+1][this.argNumOutputs];
+
+        this.intermediateOutput = new double[this.argNumHidden];
+        this.finalOutput = new double[this.argNumOutputs];
     }
 
 
@@ -143,9 +156,55 @@ public class NeuralNet implements NeuralNetInterface{
         }
     }
 
+    /*
+    * To fill the weight matrices with a custom value
+    * */
+    public void fillWeights(double f) {
+        /*
+         *Fill this.weightsInput with f
+         * */
+        for(int i=0;i<(this.argNumInputs+1);i++){
+            for(int j=0;j<(this.argNumHidden);j++){
+                this.weightsInput[i][j] = f;
+            }
+        }
+
+        /*
+         *Fill this.weightsOutput with f
+         * */
+        for(int i=0;i<(this.argNumHidden+1);i++){
+            for(int j=0;j<(this.argNumOutputs);j++){
+                this.weightsOutput[i][j] = f;
+            }
+        }
+    }
+
+    /*
+    * This method will compute the output 'y' for a given input 'x'
+    * Forward Propagation
+    * */
     @Override
-    public double compOutput(double[] x) {
-        return 0;
+    public double[] compOutput(double[] x) {
+        //Compute and store the intermediate output
+        for(int i=0;i<this.argNumHidden;i++){
+            double sum = 0;
+            for(int j=0;j<=this.argNumInputs;j++){
+                if(j==0) sum = sum + (this.bias*this.weightsInput[j][i]);
+                if(j!=0) sum = sum + (x[j-1]*this.weightsInput[j][i]);
+            }
+            this.intermediateOutput[i] = this.sigmoid(sum);
+        }
+
+        //Compute and store the final output
+        for(int i=0;i<this.argNumOutputs;i++){
+            double sum = 0;
+            for(int j=0;j<=this.argNumHidden;j++){
+                if(j==0) sum = sum + (this.bias*this.weightsOutput[j][i]);
+                if(j!=0) sum = sum + (this.intermediateOutput[j-1]*weightsOutput[j][i]);
+            }
+            this.finalOutput[i] = this.sigmoid(sum);
+        }
+        return this.finalOutput;
     }
 
     @Override

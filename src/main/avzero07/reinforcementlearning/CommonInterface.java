@@ -8,11 +8,15 @@ import java.io.IOException;
  * @date 18-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.7
+ * @version 0.0.91
  */
 
 /*
 Changelog
+---------------
+Version 0.0.91
+---------------
+- Updated compOut to return a double array
 ---------------
 Version 0.0.8
 ---------------
@@ -28,7 +32,7 @@ public interface CommonInterface {
      * @param x Input Vector for the NN or LUT
      * @return Value 'y' determined by the NN or LUT for the given input 'x'
      */
-    public double compOutput(double[] x);
+    public double[] compOutput(double[] x);
 
     /**
      * Informs the NN or LUT about what output value should be mapped

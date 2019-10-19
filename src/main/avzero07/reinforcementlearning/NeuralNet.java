@@ -10,11 +10,25 @@ import java.util.concurrent.ThreadLocalRandom;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.95
+ * @version 0.0.99
  */
 
 /*
 Changelog
+---------------
+Version 0.0.99
+---------------
+Date 19-Oct-2019
+- Added 2D Fields used with Momentum
+    -- weightsInputDiff     : for storing the weight change for input weights during a weight update
+    -- weightsOutputDiff    : for storing the weight change for output weights during a weight update
+- Implemented weightUpdateOutput()
+    -- Updates the weights in the hidden to output layer
+- Implemented weightUpdateHidden()
+    -- Updates the weights in the input to hidden layer
+- Separated propagateBackward() to optimize error back propagation in the hidden layer
+    -- propagateBackwardOutput()
+    -- propagateBackwardHidden()
 ---------------
 Version 0.0.95
 ---------------
@@ -71,7 +85,9 @@ public class NeuralNet implements NeuralNetInterface{
     int argNumHidden;
     int argNumOutputs;
     double[][] weightsInput;
+    double[][] weightsInputDiff;
     double[][] weightsOutput;
+    double[][] weightsOutputDiff;
     double[] intermediateOutput;  //Will store the hidden layer outputs for a given input pattern
     double[] intermediateDelta;   //Will store the delta values of the hidden layer for a given input pattern (considers bias)
     double[] finalOutput;         //Will store the final outputs for a given input pattern
@@ -94,7 +110,9 @@ public class NeuralNet implements NeuralNetInterface{
         this.argB = argB;
 
         this.weightsInput = new double[this.argNumInputs+1][this.argNumHidden];
+        this.weightsInputDiff = new double[this.argNumInputs+1][this.argNumHidden];
         this.weightsOutput = new double[this.argNumHidden+1][this.argNumOutputs];
+        this.weightsOutputDiff = new double[this.argNumHidden+1][this.argNumOutputs];
 
         this.intermediateOutput = new double[this.argNumHidden];
         this.intermediateDelta = new double[this.argNumHidden];
@@ -187,14 +205,17 @@ public class NeuralNet implements NeuralNetInterface{
     * in the hidden and output layers
     * */
     @Override
-    public void propagateBackward(double[] outputPattern) {
+    public void propagateBackwardOutput(double[] outputPattern) {
         //Compute Delta for the Output Layer
         for(int i=0;i<this.argNumOutputs;i++){
             double c = outputPattern[i];
             double y = this.finalOutput[i];
             this.finalDelta[i] = (c - y)*y*(1-y);
         }
+    }
 
+    @Override
+    public void propagateBackwardHidden(){
         //Compute Delta for the Hidden Layer
         for(int i=0;i<this.argNumHidden;i++){
             double wDelta = 0;
@@ -205,6 +226,51 @@ public class NeuralNet implements NeuralNetInterface{
             }
             double y = this.intermediateOutput[i];
             this.intermediateDelta[i] = wDelta*y*(1-y);
+        }
+    }
+
+    /*
+    * Method to update the weights at hidden to output layer
+    * */
+    @Override
+    public void weightUpdateOutput(double learningRate, double momentum) {
+        for(int i=0;i<(this.argNumOutputs);i++){
+            for(int j=0;j<(this.argNumHidden+1);j++){
+                if(j==0){
+                    double temp = this.weightsOutput[j][i];
+                    this.weightsOutput[j][i] = this.weightsOutput[j][i] + (momentum*(this.weightsOutputDiff[j][i])) + (learningRate*(this.finalDelta[i])*(1));
+                    this.weightsOutputDiff[j][i] = this.weightsOutput[j][i] - temp;
+                }
+                if(j!=0){
+                    double temp = this.weightsOutput[j][i];
+                    this.weightsOutput[j][i] = this.weightsOutput[j][i] + (momentum*(this.weightsOutputDiff[j][i])) + (learningRate*(this.finalDelta[i])*(this.intermediateOutput[j-1]));
+                    this.weightsOutputDiff[j][i] = this.weightsOutput[j][i] - temp;
+                }
+            }
+        }
+    }
+
+    /*
+     * Method to update the weights at the input to hidden layer
+     * Implemented separate from the output layer to optimize the
+     * error back propagation
+     * */
+    @Override
+    public void weightUpdateHidden(double learningRate, double momentum, double[] inputPattern) {
+        for(int i=0;i<(this.argNumHidden);i++){
+            for(int j=0;j<(this.argNumInputs+1);j++){
+                double temp;
+                if(j==0){
+                    temp = this.weightsInput[j][i];
+                    this.weightsInput[j][i] = this.weightsInput[j][i] + (momentum*(this.weightsInputDiff[j][i])) + (learningRate*(this.intermediateDelta[i])*(1));
+                    this.weightsInputDiff[j][i] = this.weightsInput[j][i] - temp;
+                }
+                if(j!=0){
+                    temp = this.weightsInput[j][i];
+                    this.weightsInput[j][i] = this.weightsInput[j][i] + (momentum*(this.weightsInputDiff[j][i])) + (learningRate*(this.intermediateDelta[i])*(inputPattern[j-1]));
+                    this.weightsInputDiff[j][i] = this.weightsInput[j][i] - temp;
+                }
+            }
         }
     }
 

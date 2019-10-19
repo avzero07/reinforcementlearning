@@ -10,11 +10,23 @@ import java.util.Arrays;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.95
+ * @version 0.0.99
  */
 
 /*
 Changelog
+---------------
+Version 0.0.99
+---------------
+Date 19-Oct-2019
+- Added tests for weightUpdate methods
+    -- weightUpdateOuter()
+    -- weightUpdateHidden()
+- Update the test for propagateBack()
+    -- Incorporates the new methods propagateBackwardOutput() and propagateBackwardHidden()
+- Updated utility methods
+    -- disp2d(double[][] ma, ma.rowlen, ma.columlen)                :   Displays a 2D Array
+    -- dispOutMatrix(double[] ar1, ar1.len, double[] ar2, ar2.len)  :   Displays 2 1D Arrays Back to Back
 ---------------
 Version 0.0.95
 ---------------
@@ -253,10 +265,9 @@ public class NeuralNet_Test {
     * Test to check the compOutput function which
     * calculates the end-to-end weighted sum
     *  */
-    double[] ip1 = {1,1};
-
     @Test
     public void compOutputTest(){
+        double[] ip1 = {1,1};
         double f = 2.0;
         nn.fillWeights(f);
         nn.compOutput(ip1);
@@ -281,11 +292,12 @@ public class NeuralNet_Test {
     }
 
     /*
-    * Test for propagateBackward()
+    * Test for propagateBackwardOutput() and propagateBackwardHidden()
     * Checks whether delta arrays are correctly populated
     * */
     @Test
     public void propagateBackwardTest(){
+        double[] ip1 = {1,1};
         double[] opPattern = {0};
 
         nn.zeroWeights();
@@ -295,7 +307,15 @@ public class NeuralNet_Test {
 
         //Result of forwardPropagation (finalOutput) will be 0.9999055403765511
 
-        nn.propagateBackward(opPattern);
+        nn.propagateBackwardOutput(opPattern);
+
+        //System.out.println("Post Output Delta Update");
+        //dispOutputMatrix(nn.intermediateDelta,nn.intermediateDelta.length,nn.finalDelta,nn.finalDelta.length);
+
+        nn.propagateBackwardHidden();
+
+        //System.out.println("Post Hidden Delta Update");
+        //dispOutputMatrix(nn.intermediateDelta,nn.intermediateDelta.length,nn.finalDelta,nn.finalDelta.length);
 
         //For output layer
         //Expected op delta = (0-0.9999055403765511)*(0.9999055403765511)*(1-0.9999055403765511) = -0.00009444177
@@ -329,6 +349,89 @@ public class NeuralNet_Test {
     }
 
     /*
+    * Test to validate the weightUpdateOutput() method
+    * */
+    @Test
+    public void weightUpdateOutputTest(){
+        double[] ip1 = {1,1};
+        double[] opPattern = {0};
+        double learningRate = 1.0;
+        double momentum = 0;
+
+        nn.zeroWeights();
+        nn.fillWeights(2.0);
+
+        nn.propagateForward(ip1);
+        nn.propagateBackwardOutput(opPattern);
+        nn.propagateBackwardHidden();
+
+        double opAtHiddenLayer = nn.intermediateOutput[0];
+        double[] newIp = {1,opAtHiddenLayer,opAtHiddenLayer,opAtHiddenLayer,opAtHiddenLayer};
+        double deltaAtOp = nn.finalDelta[0];
+        double[] expected = new double[nn.argNumHidden+1];
+
+        for(int i=0;i<(nn.argNumOutputs);i++){
+            for(int j=0;j<(argNumHidden+1);j++){
+                 expected[j] = nn.weightsOutput[j][i]+(learningRate*deltaAtOp*newIp[j]);
+            }
+        }
+
+        nn.weightUpdateOutput(learningRate,momentum);
+
+        double[] actual = new double[argNumHidden+1];
+        for(int i=0;i<argNumHidden+1;i++){
+            actual[i] = nn.weightsOutput[i][0];
+        }
+
+        //dispOutputMatrix(expected,expected.length,actual,actual.length);
+        //disp2D(nn.weightsOutputDiff,nn.argNumHidden+1,nn.argNumOutputs);
+
+        Assert.assertArrayEquals(expected,actual,0);
+    }
+
+    /*
+    * Test to validate the weightUpdateHidden() method
+    * */
+    @Test
+    public void weightUpdateHiddenTest(){
+        double[] ip1 = {1,1};
+        double[] opPattern = {0};
+        double learningRate = 1.0;
+        double momentum = 0;
+
+        nn.zeroWeights();
+        nn.fillWeights(2.0);
+
+        nn.propagateForward(ip1);
+        nn.propagateBackwardOutput(ip1);
+        nn.propagateBackwardHidden();
+
+        double[] newIp = {1,ip1[0],ip1[1]};
+        double[] deltaHid = {nn.intermediateDelta[0],nn.intermediateDelta[1],nn.intermediateDelta[2],nn.intermediateDelta[3]};
+        double[][] expected = new double[nn.argNumInputs+1][argNumHidden];
+
+        for(int i=0;i<(deltaHid.length);i++){
+            for(int j=0;j<(newIp.length);j++){
+                expected[j][i] = nn.weightsInput[j][i] + (deltaHid[i]*newIp[j]);
+            }
+        }
+        nn.weightUpdateHidden(learningRate,momentum,ip1);
+
+        int score = 0;
+
+        for(int i=0;i<(deltaHid.length);i++){
+            for(int j=0;j<(newIp.length);j++){
+                if(expected[j][i]==nn.weightsInput[j][i]) score++;
+            }
+        }
+
+        //disp2D(expected,newIp.length,deltaHid.length);
+        //disp2D(nn.weightsInput,newIp.length,deltaHid.length);
+
+        Assert.assertEquals((deltaHid.length*newIp.length),score);
+    }
+
+    /*
     * Utility methods to help debug
     * */
 
@@ -354,7 +457,19 @@ public class NeuralNet_Test {
     }
 
     /*
-     * Method to display intermediate and outputMatrices
+    * Generic method to Display a 2D Array
+    * */
+    public void disp2D(double[][] matrix, int rowLength, int collength){
+        for(int i=0;i<(rowLength);i++){
+            for(int j=0;j<(collength);j++){
+                System.out.print(matrix[i][j]+" ");
+            }
+            System.out.println();
+        }
+    }
+
+    /*
+     * Method to display 2 Arrays one after the other
      * */
     public void dispOutputMatrix(double[] interOp, int interOpLen, double[] finalOp, int finalOpLen){
         for(int i=0;i<interOpLen;i++){
@@ -362,7 +477,9 @@ public class NeuralNet_Test {
         }
 
         System.out.println();
-        System.out.println(finalOp[0]);
+        for(int i=0;i<finalOpLen;i++){
+            System.out.println(finalOp[i]);
+        }
     }
 
 

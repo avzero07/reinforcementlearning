@@ -5,11 +5,22 @@ package avzero07.reinforcementlearning;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.95
+ * @version 0.0.99
  */
 
 /*
 Changelog
+---------------
+Version 0.0.99
+---------------
+Date 19-Oct-2019
+- Added methods
+    -- weightUpdateOutput()
+    -- weightUpdateHidden()
+- Modified methods
+    -- propagateBackward() split into two methods
+        --- propagateBackwardOutput()
+        --- propagateBackwardHidden()
 ---------------
 Version 0.0.95
 ---------------
@@ -66,10 +77,32 @@ public interface NeuralNetInterface extends CommonInterface{
     public void propagateForward(double[] x);
 
     /**
-    * Function to perform Backward Propagation
+    * Function to perform Backward Propagation at the OP layer
     * NOTE: Function if for a single pattern and not for an Epoch
-    * It will update/populate the delta arrays in the hidden and output layers
+    * It will update/populate the delta arrays in the output layer
      * @param outputPatter is the output pattern for a given input x
     * */
-    public void propagateBackward(double[] outputPatter);
+    public void propagateBackwardOutput(double[] outputPatter);
+
+    /**
+     * Function to perform Backward Propagation at the hidden layer
+     * NOTE: Function if for a single pattern and not for an Epoch
+     * It will update/populate the delta arrays in the hidden layer
+     * */
+    public void propagateBackwardHidden();
+
+    /**
+     * Function to make weight updates to the hidden to output layer
+     * @param learningRate is the learning rate to be used while training
+     * @param momentum is the momentum for weight update
+     * */
+    public void weightUpdateOutput(double learningRate, double momentum);
+
+    /**
+     * Function to make weight updates to the input to hidden layer
+     * @param learningRate  is the learning rate to be used while training
+     * @param momentum is the momentum for weight update
+     * @param inputPattern is the input pattern x
+     * */
+    public void weightUpdateHidden(double learningRate, double momentum, double[] inputPattern);
 }

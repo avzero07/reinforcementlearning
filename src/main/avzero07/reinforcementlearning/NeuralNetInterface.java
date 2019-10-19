@@ -42,7 +42,7 @@ public interface NeuralNetInterface extends CommonInterface{
      * Set the weights to random values. Will be used to initialize.
      * <Implementation Set to Change based on Implementation>
      */
-    public void initWeights();
+    public void initWeights(double lower, double upper);
 
     /**
      * Set the weights to Zero

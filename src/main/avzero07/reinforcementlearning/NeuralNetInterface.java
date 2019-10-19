@@ -1,11 +1,23 @@
-package java.avzero07.reinforcementlearning;
+package avzero07.reinforcementlearning;
 
 /**
  * NeuralNet Interface that extends the CommonInterface.
  * @date 18-October-2019
  * @author avzero07 (Akshay V)
  * @email akshay.viswakumar@gmail.com
- * @version 0.0.7
+ * @version 0.0.8
+ */
+
+/*
+Changelog
+---------------
+Version 0.0.8
+---------------
+- Fixed package name: removed leading java
+---------------
+Version 0.0.7
+---------------
+- Initial implementation
  */
 
 public interface NeuralNetInterface extends CommonInterface{

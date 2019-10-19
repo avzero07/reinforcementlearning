@@ -1,4 +1,4 @@
-package java.avzero07.reinforcementlearning;
+package avzero07.reinforcementlearning;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +9,18 @@ import java.io.IOException;
  * @author avzero07 (Akshay V)
  * @email akshay.viswakumar@gmail.com
  * @version 0.0.7
+ */
+
+/*
+Changelog
+---------------
+Version 0.0.8
+---------------
+- Fixed package name: removed leading java
+---------------
+Version 0.0.7
+---------------
+- Initial implementation
  */
 
 public interface CommonInterface {

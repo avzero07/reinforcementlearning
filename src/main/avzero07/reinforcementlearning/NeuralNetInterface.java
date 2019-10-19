@@ -4,7 +4,7 @@ package avzero07.reinforcementlearning;
  * NeuralNet Interface that extends the CommonInterface.
  * @date 18-October-2019
  * @author avzero07 (Akshay V)
- * @email akshay.viswakumar@gmail.com
+ * @email "akshay.viswakumar@gmail.com"
  * @version 0.0.8
  */
 
@@ -32,7 +32,7 @@ public interface NeuralNetInterface extends CommonInterface{
     public double sigmoid(double x);
 
     /**
-     * General sihmoid with asymptotes bounded by (a,b)
+     * General sigmoid with asymptotes bounded by (a,b)
      * @param x The input to the custom Sigmoidal Function.
      * @return Value of f(x) = <Equation TBD> (Placeholder: b_minus_a / (1 + e(-x)) - minus_a)
      */

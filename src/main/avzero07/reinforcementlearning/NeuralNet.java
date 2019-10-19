@@ -8,12 +8,17 @@ import java.io.IOException;
  * Implements the NeuralNetInterface.
  * @date 18-October-2019
  * @author avzero07 (Akshay V)
- * @email akshay.viswakumar@gmail.com
- * @version 0.0.8
+ * @email "akshay.viswakumar@gmail.com"
+ * @version 0.0.89
  */
 
 /*
 Changelog
+---------------
+Version 0.0.89
+---------------
+- Added argNumOutputs field
+- Implemented sigmoid() [Bipolar Sigmoid]
 ---------------
 Version 0.0.8
 ---------------
@@ -29,22 +34,24 @@ Version 0.0.7
 
 public class NeuralNet implements NeuralNetInterface{
 
-    /**
+    /*
      * Define Fields for the NeuralNet here
      */
     int argNumInputs;
     int argNumHidden;
+    int argNumOutputs;
     double argLearningRate;
     double argMomentum;
     double argA;
     double argB;
 
-    /**
+    /*
      * Constructor Method for the NeuralNet Object
      */
-    public NeuralNet(int argNumInputs, int argNumHidden, double argLearningRate, double argMomentum, double argA, double argB){
+    public NeuralNet(int argNumInputs, int argNumHidden, int argNumOutputs, double argLearningRate, double argMomentum, double argA, double argB){
         this.argNumInputs = argNumInputs;
         this.argNumHidden = argNumHidden;
+        this.argNumOutputs = argNumOutputs;
         this.argLearningRate = argLearningRate;
         this.argMomentum = argMomentum;
         this.argA = argA;
@@ -52,8 +59,15 @@ public class NeuralNet implements NeuralNetInterface{
     }
 
     @Override
+    /*
+    * Implementation for the Bipolar Sigmoid
+    * f(x) = (2/(1+Math.pow(Math.E,-x)))-1
+    * f(x) = 1   at x = +ve
+    * f(x) = 0   at x = 0
+    * f(x) = -1  at x = -ve
+    * */
     public double sigmoid(double x) {
-        return 0;
+        return (2 / (1 + Math.pow(Math.E, -1 * x))) - 1;
     }
 
     @Override

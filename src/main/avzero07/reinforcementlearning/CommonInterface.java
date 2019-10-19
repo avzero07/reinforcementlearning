@@ -5,14 +5,20 @@ import java.io.IOException;
 
 /**
  * Common Interface for both the NeuralNet (NN) and LookUp Table (LUT) Interfaces.
- * @date 18-October-2019
+ * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.91
+ * @version 0.0.95
  */
 
 /*
 Changelog
+---------------
+Version 0.0.95
+---------------
+Date 19-Oct-2019
+- Modified compOutput
+    -- Return type is now void
 ---------------
 Version 0.0.91
 ---------------
@@ -29,10 +35,11 @@ Version 0.0.7
 
 public interface CommonInterface {
     /**
+     * Will compute the output for a given NN or LUT. Outputs
+     * are stored in the respective object's output arrays.
      * @param x Input Vector for the NN or LUT
-     * @return Value 'y' determined by the NN or LUT for the given input 'x'
      */
-    public double[] compOutput(double[] x);
+    public void compOutput(double[] x);
 
     /**
      * Informs the NN or LUT about what output value should be mapped

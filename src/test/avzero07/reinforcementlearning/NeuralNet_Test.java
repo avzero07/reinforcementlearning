@@ -7,14 +7,22 @@ import java.util.Arrays;
 
 /**
  * Test Class for Testing the NeuralNet class implementation
- * @date 18-October-2019
+ * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.91
+ * @version 0.0.95
  */
 
 /*
 Changelog
+---------------
+Version 0.0.95
+---------------
+Date 19-Oct-2019
+- Added test for propagateForward()
+- Fixed declaration mistake for output matrices
+    -- [][] --> []
+- Added test for propagateBackward()
 ---------------
 Version 0.0.91
 ---------------
@@ -53,10 +61,12 @@ public class NeuralNet_Test {
     private int argNumInputs = 2;
     private int argNumHidden = 4;
     private int argNumOutputs = 1;
-    double[][] weightsInput;
-    double[][] weightsOutput;
-    double[][] intermediateOutput;
-    double[][] finalOutput;
+    private double[][] weightsInput;
+    private double[][] weightsOutput;
+    private double[] intermediateOutput;
+    private double[] intermediateDelta;
+    private double[] finalOutput;
+    private double[] finalDelta;
     private double argLearningRate = 2.5;
     private double argMomentum = 3.0;
     private double argA = 1.7;
@@ -240,7 +250,7 @@ public class NeuralNet_Test {
     }
 
     /*
-    *Test to check the compOutput function which
+    * Test to check the compOutput function which
     * calculates the end-to-end weighted sum
     *  */
     double[] ip1 = {1,1};
@@ -249,12 +259,78 @@ public class NeuralNet_Test {
     public void compOutputTest(){
         double f = 2.0;
         nn.fillWeights(f);
+        nn.compOutput(ip1);
 
         double[] expectedY = {0.999};
-        double[] actualY = nn.compOutput(ip1);
+        double[] actualY = {nn.finalOutput[0]};
+
+        //dispWeightMatrix();
+        //dispOutputMatrix(nn.intermediateOutput,nn.argNumHidden,nn.finalOutput,nn.argNumOutputs);
 
         Assert.assertArrayEquals(expectedY,actualY,0.001);
     }
+
+    /*
+    * Inserting a Test for propagateForward()
+    * Essentially identical to the previous test for compOutput()
+    * */
+    @Test
+    public void propagateForwardTest(){
+        nn.zeroWeights();
+        compOutputTest();
+    }
+
+    /*
+    * Test for propagateBackward()
+    * Checks whether delta arrays are correctly populated
+    * */
+    @Test
+    public void propagateBackwardTest(){
+        double[] opPattern = {0};
+
+        nn.zeroWeights();
+        nn.fillWeights(2.0);
+
+        nn.propagateForward(ip1);
+
+        //Result of forwardPropagation (finalOutput) will be 0.9999055403765511
+
+        nn.propagateBackward(opPattern);
+
+        //For output layer
+        //Expected op delta = (0-0.9999055403765511)*(0.9999055403765511)*(1-0.9999055403765511) = -0.00009444177
+        double expectedFinalOp = (0-0.9999055403765511)*(0.9999055403765511)*(1-0.9999055403765511);
+
+        //For hidden layer
+        //Intermediate Output for a given neuron = 0.9950547536867307
+        //Expected hidden delta = (2.0*-0.00009444177)*(0.9950547536867307)*(1-0.9950547536867307) = -9.29456374e-7
+        double expectedHiddenOp = (2.0*-0.00009444177)*(0.9950547536867307)*(1-0.9950547536867307);
+
+        double[] expected = {4*expectedHiddenOp,expectedFinalOp};
+
+        //Calculate the sum of the hidden layer outputs
+        double actHidOpSum = 0;
+        for(int i=0;i<nn.argNumHidden;i++){
+            actHidOpSum = actHidOpSum + nn.intermediateDelta[i];
+        }
+
+        double[] actual = {actHidOpSum,nn.finalDelta[0]};
+
+        /*
+        * For LOLs
+        * arrays first differed at element [0];
+        * Expected :-3.717825583030255E-6
+        * Actual   :-3.717825939326925E-6
+        *
+        * Setting delta to 0.000000000005
+        * */
+
+        Assert.assertArrayEquals(expected,actual,0.000000000005);
+    }
+
+    /*
+    * Utility methods to help debug
+    * */
 
     /*
     * Method to display weightMatrices
@@ -280,13 +356,13 @@ public class NeuralNet_Test {
     /*
      * Method to display intermediate and outputMatrices
      * */
-    public void dispOutputMatrix(){
-        for(int i=0;i<this.argNumHidden;i++){
-            System.out.println(Arrays.toString(this.intermediateOutput[i]));
+    public void dispOutputMatrix(double[] interOp, int interOpLen, double[] finalOp, int finalOpLen){
+        for(int i=0;i<interOpLen;i++){
+            System.out.println(interOp[i]);
         }
 
         System.out.println();
-        System.out.println(Arrays.toString(this.finalOutput[0]));
+        System.out.println(finalOp[0]);
     }
 
 

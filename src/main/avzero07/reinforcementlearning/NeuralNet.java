@@ -7,14 +7,27 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * The NeuralNet Class.
  * Implements the NeuralNetInterface.
- * @date 18-October-2019
+ * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.91
+ * @version 0.0.95
  */
 
 /*
 Changelog
+---------------
+Version 0.0.95
+---------------
+Date 19-Oct-2019
+- Implemented propagateForward()
+    -- Just calls compOutput()
+- Modified compOutput()
+    -- Return type is now void
+- Added 1D array fields to NeuralNet
+    -- intermediateDelta    : for storing the delta at hidden layer
+    -- finalDelta           : for storing the delta at output layer
+- Implemented propagateBackward()
+    -- Performs back propagation at output and hidden layers
 ---------------
 Version 0.0.91
 ---------------
@@ -59,8 +72,10 @@ public class NeuralNet implements NeuralNetInterface{
     int argNumOutputs;
     double[][] weightsInput;
     double[][] weightsOutput;
-    double[] intermediateOutput;  //Will store the intermediate outputs for a given input pattern
+    double[] intermediateOutput;  //Will store the hidden layer outputs for a given input pattern
+    double[] intermediateDelta;   //Will store the delta values of the hidden layer for a given input pattern (considers bias)
     double[] finalOutput;         //Will store the final outputs for a given input pattern
+    double[] finalDelta;          //Will store the delta values of the output layer for a given input pattern (considers bias)
     double argLearningRate;
     double argMomentum;
     double argA;
@@ -82,7 +97,9 @@ public class NeuralNet implements NeuralNetInterface{
         this.weightsOutput = new double[this.argNumHidden+1][this.argNumOutputs];
 
         this.intermediateOutput = new double[this.argNumHidden];
+        this.intermediateDelta = new double[this.argNumHidden];
         this.finalOutput = new double[this.argNumOutputs];
+        this.finalDelta = new double[this.argNumOutputs];
     }
 
 
@@ -157,6 +174,41 @@ public class NeuralNet implements NeuralNetInterface{
     }
 
     /*
+    * This method is only to make the implementation meaningful
+    * for a NeuralNet since compOutput is too generic
+    * */
+    @Override
+    public void propagateForward(double[] x) {
+        compOutput(x);
+    }
+
+    /*
+    * This method will calculate and populate the delta matrices
+    * in the hidden and output layers
+    * */
+    @Override
+    public void propagateBackward(double[] outputPattern) {
+        //Compute Delta for the Output Layer
+        for(int i=0;i<this.argNumOutputs;i++){
+            double c = outputPattern[i];
+            double y = this.finalOutput[i];
+            this.finalDelta[i] = (c - y)*y*(1-y);
+        }
+
+        //Compute Delta for the Hidden Layer
+        for(int i=0;i<this.argNumHidden;i++){
+            double wDelta = 0;
+            for(int j=0;j<this.argNumOutputs;j++){
+                double w = this.weightsOutput[i][j];
+                double del = this.finalDelta[j];
+                wDelta = wDelta + (w*del);
+            }
+            double y = this.intermediateOutput[i];
+            this.intermediateDelta[i] = wDelta*y*(1-y);
+        }
+    }
+
+    /*
     * To fill the weight matrices with a custom value
     * */
     public void fillWeights(double f) {
@@ -184,7 +236,7 @@ public class NeuralNet implements NeuralNetInterface{
     * Forward Propagation
     * */
     @Override
-    public double[] compOutput(double[] x) {
+    public void compOutput(double[] x) {
         //Compute and store the intermediate output
         for(int i=0;i<this.argNumHidden;i++){
             double sum = 0;
@@ -204,7 +256,6 @@ public class NeuralNet implements NeuralNetInterface{
             }
             this.finalOutput[i] = this.sigmoid(sum);
         }
-        return this.finalOutput;
     }
 
     @Override

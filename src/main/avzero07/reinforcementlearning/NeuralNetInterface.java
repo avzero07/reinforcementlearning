@@ -2,14 +2,21 @@ package avzero07.reinforcementlearning;
 
 /**
  * NeuralNet Interface that extends the CommonInterface.
- * @date 18-October-2019
+ * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.8
+ * @version 0.0.95
  */
 
 /*
 Changelog
+---------------
+Version 0.0.95
+---------------
+Date 19-Oct-2019
+- Added methods
+    -- propagateForward()   : forward propagation for NN
+    -- propagateBackward()  : backward propagation for NN
 ---------------
 Version 0.0.8
 ---------------
@@ -48,4 +55,21 @@ public interface NeuralNetInterface extends CommonInterface{
      * Set the weights to Zero
      */
     public void zeroWeights();
+
+    /**
+    * Function to carry out Forward Propagation
+    * It will update/populate the intermediate and final output matrices
+    * Essentially will only call compOutput()
+    * New Name to make the method meaningful for a NeuralNet
+     * @param x is the input array
+    * */
+    public void propagateForward(double[] x);
+
+    /**
+    * Function to perform Backward Propagation
+    * NOTE: Function if for a single pattern and not for an Epoch
+    * It will update/populate the delta arrays in the hidden and output layers
+     * @param outputPatter is the output pattern for a given input x
+    * */
+    public void propagateBackward(double[] outputPatter);
 }

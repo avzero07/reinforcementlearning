@@ -34,6 +34,7 @@ Date 20-Oct-2019
     -- Accepts User Input to set the number of trials
 - Writes the following to "C:/Users/Akshay/Desktop/Reinforcement Learning Data/Q1C/"
     -- Each run gets its own Timestamped folder
+        --- Fixed date formatting
     -- Each such folder contains
         --- CSV files named <trial>.<epoch>.txt
         --- Statistics-Q1C.txt which contains some stats across all trials for the current run
@@ -83,7 +84,7 @@ public class BPLearning3 {
         double ratioConv;
 
         Date date = Calendar.getInstance().getTime();
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh-mm-ss");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
         String strDate = dateFormat.format(date);
 
         String pathString = "C:/Users/Akshay/Desktop/Reinforcement Learning Data/Q1C/Test "+strDate+"/";

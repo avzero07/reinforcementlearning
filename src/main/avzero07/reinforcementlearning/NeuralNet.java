@@ -10,11 +10,27 @@ import java.util.concurrent.ThreadLocalRandom;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.99
+ * @version 0.1.0
  */
 
 /*
 Changelog
+---------------
+Version 0.1.0
+---------------
+Date 19-Oct-2019
+- Milestone version!
+- Implemented new methods
+    -- computeActivation() to call the appropriate sigmoid
+    -- computeActivationDerive() to compute the appropriate derivative
+- Updated the following methods
+    -- propagateForward() has a new parameter to specify appropriate sigmoid
+        --- Now calls computeActivation() internally
+    -- propagateBackwardMethods have a new parameter to specify the appropriate sigmoid derivative
+        --- Now calls computeActivationDeriv() internally
+    -- propagateForward() is no longer a placeholder
+        --- Swapped roles with compOutput() which now calls propagateForward() with t = 0
+        --- Decision to swap in order to keep compOutput() as is in the common interface
 ---------------
 Version 0.0.99
 ---------------
@@ -124,13 +140,52 @@ public class NeuralNet implements NeuralNetInterface{
     /*
     * Implementation for the Bipolar Sigmoid
     * f(x) = (2/(1+Math.pow(Math.E,-x)))-1
-    * f(x) = 1   at x = +ve
-    * f(x) = 0   at x = 0
-    * f(x) = -1  at x = -ve
+    * f(x) = 1      at x = +ve
+    * f(x) = 0      at x = 0
+    * f(x) = -1     at x = -ve
     * */
     @Override
-    public double sigmoid(double x) {
-        return (2 / (1 + Math.pow(Math.E, -1 * x))) - 1;
+    public double bipSigmoid(double x) {
+        return ((2 / (1 + Math.pow(Math.E, -1 * x))) - 1);
+    }
+
+    /*
+     * Implementation for the Sigmoid
+     * f(x) = 1/(1+Math.pow(Math.E,-x))
+     * f(x) = 1     at x = +ve
+     * f(x) = 0.5   at x = 0
+     * f(x) = 0     at x = -ve
+     * */
+    @Override
+    public double sigmoid(double x) { return (1/(1+Math.pow(Math.E,-1*x))); }
+
+    /*
+    * Implements the general activation function
+    * which calls either sigmoid or bipSigmoid based
+    * on the toggle.
+    *
+    * Default is sigmoid()
+    * */
+    @Override
+    public double computeActivation(double y, int t) {
+        if(t==1) return bipSigmoid(y);
+        else return sigmoid(y);
+    }
+
+    /*
+     * Implements the general first derivative of the activation function
+     * which calls the appropriate function related to either sigmoid or
+     * bipSigmoid based on the toggle.
+     *
+     * Default is sigmoid()
+     *
+     * NOTE: x is f(x) for the appropriate sigmoid. sigmoid() or
+     * bipSigmoid() will not be called here.
+     * */
+    @Override
+    public double computeActivationDeriv(double y, int t) {
+        if(t==1) return (0.5*(1+y)*(1-y));
+        else return (y*(1-y));
     }
 
     @Override
@@ -196,8 +251,26 @@ public class NeuralNet implements NeuralNetInterface{
     * for a NeuralNet since compOutput is too generic
     * */
     @Override
-    public void propagateForward(double[] x) {
-        compOutput(x);
+    public void propagateForward(double[] x, int t) {
+        //Compute and store the intermediate output
+        for(int i=0;i<this.argNumHidden;i++){
+            double sum = 0;
+            for(int j=0;j<=this.argNumInputs;j++){
+                if(j==0) sum = sum + (this.bias*this.weightsInput[j][i]);
+                if(j!=0) sum = sum + (x[j-1]*this.weightsInput[j][i]);
+            }
+            this.intermediateOutput[i] = this.computeActivation(sum,t);
+        }
+
+        //Compute and store the final output
+        for(int i=0;i<this.argNumOutputs;i++){
+            double sum = 0;
+            for(int j=0;j<=this.argNumHidden;j++){
+                if(j==0) sum = sum + (this.bias*this.weightsOutput[j][i]);
+                if(j!=0) sum = sum + (this.intermediateOutput[j-1]*weightsOutput[j][i]);
+            }
+            this.finalOutput[i] = this.computeActivation(sum,t);
+        }
     }
 
     /*
@@ -205,17 +278,17 @@ public class NeuralNet implements NeuralNetInterface{
     * in the hidden and output layers
     * */
     @Override
-    public void propagateBackwardOutput(double[] outputPattern) {
+    public void propagateBackwardOutput(double[] outputPattern, int t) {
         //Compute Delta for the Output Layer
         for(int i=0;i<this.argNumOutputs;i++){
             double c = outputPattern[i];
             double y = this.finalOutput[i];
-            this.finalDelta[i] = (c - y)*y*(1-y);
+            this.finalDelta[i] = (c - y)*this.computeActivationDeriv(y,t);
         }
     }
 
     @Override
-    public void propagateBackwardHidden(){
+    public void propagateBackwardHidden(int t){
         //Compute Delta for the Hidden Layer
         for(int i=0;i<this.argNumHidden;i++){
             double wDelta = 0;
@@ -225,7 +298,7 @@ public class NeuralNet implements NeuralNetInterface{
                 wDelta = wDelta + (w*del);
             }
             double y = this.intermediateOutput[i];
-            this.intermediateDelta[i] = wDelta*y*(1-y);
+            this.intermediateDelta[i] = wDelta*y*this.computeActivationDeriv(y,t);
         }
     }
 
@@ -303,25 +376,7 @@ public class NeuralNet implements NeuralNetInterface{
     * */
     @Override
     public void compOutput(double[] x) {
-        //Compute and store the intermediate output
-        for(int i=0;i<this.argNumHidden;i++){
-            double sum = 0;
-            for(int j=0;j<=this.argNumInputs;j++){
-                if(j==0) sum = sum + (this.bias*this.weightsInput[j][i]);
-                if(j!=0) sum = sum + (x[j-1]*this.weightsInput[j][i]);
-            }
-            this.intermediateOutput[i] = this.sigmoid(sum);
-        }
-
-        //Compute and store the final output
-        for(int i=0;i<this.argNumOutputs;i++){
-            double sum = 0;
-            for(int j=0;j<=this.argNumHidden;j++){
-                if(j==0) sum = sum + (this.bias*this.weightsOutput[j][i]);
-                if(j!=0) sum = sum + (this.intermediateOutput[j-1]*weightsOutput[j][i]);
-            }
-            this.finalOutput[i] = this.sigmoid(sum);
-        }
+        propagateForward(x,0);
     }
 
     @Override

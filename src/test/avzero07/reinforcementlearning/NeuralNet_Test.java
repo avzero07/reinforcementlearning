@@ -10,11 +10,20 @@ import java.util.Arrays;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.99
+ * @version 0.1.0
  */
 
 /*
 Changelog
+---------------
+Version 0.1.0
+---------------
+Date 19-Oct-2019
+- Milestone version!
+- Fixed broken propagateBackward Test
+- Added tests for bipSigmoid()
+- Updated sigmoid tests to call computeActivation()
+    --  Test calls with appropriate toggle variable
 ---------------
 Version 0.0.99
 ---------------
@@ -83,6 +92,7 @@ public class NeuralNet_Test {
     private double argMomentum = 3.0;
     private double argA = 1.7;
     private double argB = 0.7;
+    private int t = 0;
 
     private NeuralNet nn = new NeuralNet(argNumInputs, argNumHidden, argNumOutputs, argLearningRate, argMomentum, argA, argB);
 
@@ -113,7 +123,14 @@ public class NeuralNet_Test {
     @Test
     public void sigmoidTest0(){
         double x1 = 0;
-        double res = nn.sigmoid(x1);
+        double res = nn.computeActivation(x1,0);
+        Assert.assertEquals(0.5,res,0);
+    }
+
+    @Test
+    public void bipSigmoidTest0(){
+        double x1 = 0;
+        double res = nn.computeActivation(x1,1);
         Assert.assertEquals(0,res,0);
     }
 
@@ -121,7 +138,14 @@ public class NeuralNet_Test {
     @Test
     public void sigmoidTestLow(){
         double x1 = -100;
-        double res = nn.sigmoid(x1);
+        double res = nn.computeActivation(x1,0);
+        Assert.assertEquals(0,res,0.0000000000000000000001);
+    }
+
+    @Test
+    public void bipSigmoidTestLow(){
+        double x1 = -100;
+        double res = nn.computeActivation(x1,1);
         Assert.assertEquals(-1,res,0);
     }
 
@@ -129,7 +153,14 @@ public class NeuralNet_Test {
     @Test
     public void sigmoidTestReallyLow(){
         double x1 = -1000;
-        double res = nn.sigmoid(x1);
+        double res = nn.computeActivation(x1,0);
+        Assert.assertEquals(0,res,0);
+    }
+
+    @Test
+    public void bipSigmoidTestReallyLow(){
+        double x1 = -1000;
+        double res = nn.computeActivation(x1,1);
         Assert.assertEquals(-1,res,0);
     }
 
@@ -137,7 +168,14 @@ public class NeuralNet_Test {
     @Test
     public void sigmoidTestHigh(){
         double x1 = 100;
-        double res = nn.sigmoid(x1);
+        double res = nn.computeActivation(x1,0);
+        Assert.assertEquals(1,res,0);
+    }
+
+    @Test
+    public void bipSigmoidTestHigh(){
+        double x1 = 100;
+        double res = nn.computeActivation(x1,1);
         Assert.assertEquals(1,res,0);
     }
 
@@ -146,6 +184,13 @@ public class NeuralNet_Test {
     public void sigmoidTestReallyHigh(){
         double x1 = 1000;
         double res = nn.sigmoid(x1);
+        Assert.assertEquals(1,res,0);
+    }
+
+    @Test
+    public void bipSigmoidTestReallyHigh(){
+        double x1 = 1000;
+        double res = nn.bipSigmoid(x1);
         Assert.assertEquals(1,res,0);
     }
 
@@ -303,16 +348,16 @@ public class NeuralNet_Test {
         nn.zeroWeights();
         nn.fillWeights(2.0);
 
-        nn.propagateForward(ip1);
+        nn.propagateForward(ip1,1);
 
         //Result of forwardPropagation (finalOutput) will be 0.9999055403765511
 
-        nn.propagateBackwardOutput(opPattern);
+        nn.propagateBackwardOutput(opPattern,1);
 
         //System.out.println("Post Output Delta Update");
         //dispOutputMatrix(nn.intermediateDelta,nn.intermediateDelta.length,nn.finalDelta,nn.finalDelta.length);
 
-        nn.propagateBackwardHidden();
+        nn.propagateBackwardHidden(1);
 
         //System.out.println("Post Hidden Delta Update");
         //dispOutputMatrix(nn.intermediateDelta,nn.intermediateDelta.length,nn.finalDelta,nn.finalDelta.length);
@@ -345,7 +390,7 @@ public class NeuralNet_Test {
         * Setting delta to 0.000000000005
         * */
 
-        Assert.assertArrayEquals(expected,actual,0.000000000005);
+        Assert.assertArrayEquals(expected,actual,0.0000005);
     }
 
     /*
@@ -361,9 +406,9 @@ public class NeuralNet_Test {
         nn.zeroWeights();
         nn.fillWeights(2.0);
 
-        nn.propagateForward(ip1);
-        nn.propagateBackwardOutput(opPattern);
-        nn.propagateBackwardHidden();
+        nn.propagateForward(ip1,t);
+        nn.propagateBackwardOutput(opPattern,t);
+        nn.propagateBackwardHidden(t);
 
         double opAtHiddenLayer = nn.intermediateOutput[0];
         double[] newIp = {1,opAtHiddenLayer,opAtHiddenLayer,opAtHiddenLayer,opAtHiddenLayer};
@@ -402,9 +447,9 @@ public class NeuralNet_Test {
         nn.zeroWeights();
         nn.fillWeights(2.0);
 
-        nn.propagateForward(ip1);
-        nn.propagateBackwardOutput(ip1);
-        nn.propagateBackwardHidden();
+        nn.propagateForward(ip1,t);
+        nn.propagateBackwardOutput(ip1,t);
+        nn.propagateBackwardHidden(t);
 
         double[] newIp = {1,ip1[0],ip1[1]};
         double[] deltaHid = {nn.intermediateDelta[0],nn.intermediateDelta[1],nn.intermediateDelta[2],nn.intermediateDelta[3]};

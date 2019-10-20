@@ -5,11 +5,22 @@ package avzero07.reinforcementlearning;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.99
+ * @version 0.1.0
  */
 
 /*
 Changelog
+---------------
+Version 0.1.0
+---------------
+Date 19-Oct-2019
+- Milestone version!
+- Added methods
+    -- computeActivation()
+    -- computeActivationDeriv()
+- Updated methods
+    -- propagateForward()
+    -- propagateBackward()
 ---------------
 Version 0.0.99
 ---------------
@@ -47,7 +58,33 @@ public interface NeuralNetInterface extends CommonInterface{
      * @param x The input to the Sigmoidal Function.
      * @return Value of f(x) = 2/(1+exp(e,-x)) - 1
      */
+    public double bipSigmoid(double x);
+
+    /**
+     * Used to implement a Binary Sigmoid
+     * @param x The input to the Sigmoidal Function.
+     * @return Value of f(x) = 1/(1+exp(e,-x))
+     */
     public double sigmoid(double x);
+
+    /**
+     * Selector function for appropriate Activation Function
+     * Currently will toggle between Sigmoid (0) and Bipolar Sigmoid (1)
+     * @param y input to the activation function
+     * @param t specifies Sigmoid (0) or Bipolar Sigmoid (1)
+     */
+    public double computeActivation(double y, int t);
+
+    /**
+     * Selector function for appropriate derivative of the Activation Function
+     * Currently will toggle between derivative of Sigmoid (0) and Bipolar Sigmoid (1)
+     *
+     * NOTE: Current implementation does not call sigmoid() within this.
+     *
+     * @param y input to the activation function where x = f(x) of appropriate sigmoid
+     * @param t specifies Sigmoid (0) or Bipolar Sigmoid (1)
+     */
+    public double computeActivationDeriv(double y, int t);
 
     /**
      * General sigmoid with asymptotes bounded by (a,b)
@@ -73,23 +110,26 @@ public interface NeuralNetInterface extends CommonInterface{
     * Essentially will only call compOutput()
     * New Name to make the method meaningful for a NeuralNet
      * @param x is the input array
+     * @param t specifies the sigmoid [0 - Sigmoid, 1 - Bipolar Sigmoid]
     * */
-    public void propagateForward(double[] x);
+    public void propagateForward(double[] x, int t);
 
     /**
     * Function to perform Backward Propagation at the OP layer
     * NOTE: Function if for a single pattern and not for an Epoch
     * It will update/populate the delta arrays in the output layer
      * @param outputPatter is the output pattern for a given input x
+     * @param t specifies the sigmoid whose derivative is required
     * */
-    public void propagateBackwardOutput(double[] outputPatter);
+    public void propagateBackwardOutput(double[] outputPatter, int t);
 
     /**
      * Function to perform Backward Propagation at the hidden layer
      * NOTE: Function if for a single pattern and not for an Epoch
      * It will update/populate the delta arrays in the hidden layer
+     * @param t specifies the sigmoid whose derivative is required
      * */
-    public void propagateBackwardHidden();
+    public void propagateBackwardHidden(int t);
 
     /**
      * Function to make weight updates to the hidden to output layer

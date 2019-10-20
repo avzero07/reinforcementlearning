@@ -8,11 +8,17 @@ import java.io.IOException;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.95
+ * @version 0.1.0
  */
 
 /*
 Changelog
+---------------
+Version 0.1.0
+---------------
+Date 19-Oct-2019
+- Milestone version!
+- No major changes. Keeping version consistent
 ---------------
 Version 0.0.95
 ---------------

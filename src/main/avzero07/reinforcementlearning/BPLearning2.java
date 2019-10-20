@@ -9,6 +9,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Scanner;
 
 /**
  * Implementation Class for Back-propagation Learning
@@ -20,8 +21,29 @@ import java.util.Date;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.5
+ * @version 0.7
  */
+
+/*
+Changelog
+---------------
+Version 0.7
+---------------
+Date 20-Oct-2019
+- Added user interaction
+    -- Accepts User Input to set the number of trials
+- Writes the following to "C:/Users/Akshay/Desktop/Reinforcement Learning Data/Q1B/"
+    -- Each run gets its own Timestamped folder
+    -- Each such folder contains
+        --- CSV files named <trial>.<epoch>.txt
+        --- Statistics-Q1B.txt which contains some stats across all trials for the current run
+        --- "Epoch List (Converged) Q1C.txt" which contains Epochs to convergence for each trial
+---------------
+Version 0.5
+---------------
+Date 19-Oct-2019
+- Initial Implementation
+* */
 
 public class BPLearning2 {
 
@@ -44,7 +66,11 @@ public class BPLearning2 {
 
         double E = 0;
 
-        int loop = 1000;
+        //Receive Input from User to Decide Number of Trials
+        Scanner scan = new Scanner(System.in);
+        System.out.println("How many trials would you like to perform?");
+        int loop = scan.nextInt();
+        scan.close();
 
         double lowestK = 100000;
         double highestK = 0;
@@ -64,8 +90,8 @@ public class BPLearning2 {
         File dir = new File(pathString);
         dir.mkdirs();
 
+        String kCount = "";
         while(loop!=0){
-            System.out.println(loop);
             loop--;
             NeuralNet nn1 = new NeuralNet(numInputNeurons, numHiddenNeurons, numOutputNeurons, learningRate, momentum, argA, argB);
             nn1.initWeights(-0.5,0.5);
@@ -75,8 +101,10 @@ public class BPLearning2 {
             String s = "";
             while(true){
                 k++;
-                if(k>100000)
+                if(k>100000){
+                    System.out.println("Trial Number: "+loop+" Still yet to converge at Epoch "+k);
                     break;
+                }
                 for(int i=0;i<x.length;i++){
                     nn1.propagateForward(x[i],t);
                     nn1.propagateBackwardOutput(y[i],t);
@@ -89,10 +117,14 @@ public class BPLearning2 {
                 E = 0.5*E;
                 s = s + "\n"+k+", "+E;
 
-                if(E<0.05)
+                if(E<0.05){
+                    kCount = kCount+"\n"+k;
+                    System.out.println("Trial Number: "+loop+" Converged at Epoch "+k);
                     break;
+                }
             }
             writeToFile(pathString+loop+"."+k+".txt",s);
+            writeToFile(pathString+"Epoch List (Converged) Q1B.txt",kCount+"\n");
             if(k<lowestK)
                 lowestK = k;
             sumK = sumK+k;
@@ -115,7 +147,8 @@ public class BPLearning2 {
                             +"\nAverage Number of Epochs (Total) = "+avgK
                             +"\nAverage Number of Epochs (Converged) = "+avgConvergeK
                             +"\n";
-        writeToFile(pathString+"/Stats.txt",statistics);
+        writeToFile(pathString+"/Stats-Q1B.txt",statistics);
+        System.out.println("\nStatistics"+statistics);
     }
 
     /*

@@ -5,11 +5,16 @@ package avzero07.reinforcementlearning;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.1.0
+ * @version 0.1.5
  */
 
 /*
 Changelog
+---------------
+Version 0.1.5
+---------------
+Date 19-Oct-2019
+- Added tanHyper()
 ---------------
 Version 0.1.0
 ---------------
@@ -66,6 +71,13 @@ public interface NeuralNetInterface extends CommonInterface{
      * @return Value of f(x) = 1/(1+exp(e,-x))
      */
     public double sigmoid(double x);
+
+    /**
+     * Used to implement the Tan Hyperbolic activation function
+     * @param x The input to the Tan Hyperbolic Function
+     * @return Value of f(x) = Tanh(x)
+     */
+    public double tanHyper(double x);
 
     /**
      * Selector function for appropriate Activation Function

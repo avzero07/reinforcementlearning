@@ -10,11 +10,16 @@ import java.util.Arrays;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.1.0
+ * @version 0.1.5
  */
 
 /*
 Changelog
+---------------
+Version 0.1.5
+---------------
+Date 20-Oct-2019
+- Added tests for tanHyper()
 ---------------
 Version 0.1.0
 ---------------
@@ -134,6 +139,13 @@ public class NeuralNet_Test {
         Assert.assertEquals(0,res,0);
     }
 
+    @Test
+    public void tanHTest0(){
+        double x1 = 0;
+        double res = nn.computeActivation(x1,2);
+        Assert.assertEquals(0,res,0);
+    }
+
     //Test at x = -100
     @Test
     public void sigmoidTestLow(){
@@ -146,6 +158,13 @@ public class NeuralNet_Test {
     public void bipSigmoidTestLow(){
         double x1 = -100;
         double res = nn.computeActivation(x1,1);
+        Assert.assertEquals(-1,res,0);
+    }
+
+    @Test
+    public void tanHTestLow(){
+        double x1 = -100;
+        double res = nn.computeActivation(x1,2);
         Assert.assertEquals(-1,res,0);
     }
 
@@ -164,6 +183,13 @@ public class NeuralNet_Test {
         Assert.assertEquals(-1,res,0);
     }
 
+    @Test
+    public void tanHTestReallyLow(){
+        double x1 = -1000;
+        double res = nn.computeActivation(x1,2);
+        Assert.assertEquals(-1,res,0);
+    }
+
     //Test at x = 100
     @Test
     public void sigmoidTestHigh(){
@@ -179,6 +205,13 @@ public class NeuralNet_Test {
         Assert.assertEquals(1,res,0);
     }
 
+    @Test
+    public void tanHTestHigh(){
+        double x1 = 100;
+        double res = nn.computeActivation(x1,2);
+        Assert.assertEquals(1,res,0);
+    }
+
     //Test at x = 1000
     @Test
     public void sigmoidTestReallyHigh(){
@@ -191,6 +224,13 @@ public class NeuralNet_Test {
     public void bipSigmoidTestReallyHigh(){
         double x1 = 1000;
         double res = nn.bipSigmoid(x1);
+        Assert.assertEquals(1,res,0);
+    }
+
+    @Test
+    public void tanHTestReallyHigh(){
+        double x1 = 1000;
+        double res = nn.computeActivation(x1,2);
         Assert.assertEquals(1,res,0);
     }
 

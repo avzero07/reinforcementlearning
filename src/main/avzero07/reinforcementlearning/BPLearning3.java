@@ -21,11 +21,17 @@ import java.util.Scanner;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.7
+ * @version 0.8
  */
 
 /*
 Changelog
+---------------
+Version 0.8
+---------------
+Date 20-Oct-2019
+- Now indicates the type of Activation Function in use
+- Added functionality to save weight matrices from each trial
 ---------------
 Version 0.7
 ---------------
@@ -64,6 +70,14 @@ public class BPLearning3 {
         double argB = 0;
 
         int t = 1;
+        String activation = "";
+        switch(t){
+            case 1: activation = "Bipolar Sigmoid";
+            break;
+            case 2: activation = "Tan Hyperbolic";
+            break;
+            default: activation = "Sigmoid";
+        }
 
         double E = 0;
 
@@ -86,10 +100,13 @@ public class BPLearning3 {
         Date date = Calendar.getInstance().getTime();
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
         String strDate = dateFormat.format(date);
-
-        String pathString = "C:/Users/Akshay/Desktop/Reinforcement Learning Data/Q1C/Test "+strDate+"/";
+        String pathString = "C:/Users/Akshay/Desktop/Reinforcement Learning Data/Q1C/Test "+strDate+"-"+activation+"/";
         File dir = new File(pathString);
         dir.mkdirs();
+
+        String pathStringWeights = pathString+"Final Weights/";
+        File dirWeights = new File(pathStringWeights);
+        dirWeights.mkdirs();
 
         String kCount = "";
         while(loop!=0){
@@ -104,6 +121,8 @@ public class BPLearning3 {
                 k++;
                 if(k>100000){
                     System.out.println("Trial Number: "+loop+" Still yet to converge at Epoch "+k);
+                    String identifier = loop+"."+k+".";
+                    nn1.saveWeights(pathStringWeights,identifier);
                     break;
                 }
                 for(int i=0;i<x.length;i++){
@@ -121,6 +140,8 @@ public class BPLearning3 {
                 if(E<0.05){
                     kCount = kCount+"\n"+k;
                     System.out.println("Trial Number: "+loop+" Converged at Epoch "+k);
+                    String identifier = loop+"."+k+".";
+                    nn1.saveWeights(pathStringWeights,identifier);
                     break;
                 }
             }
@@ -140,7 +161,8 @@ public class BPLearning3 {
         avgConvergeK = sumConvergeK/(numIter);
         ratioConv = numConv/numIter;
 
-        String statistics = "\nNumber of Tests Unconverged = "+(numIter-numConv)
+        String statistics = "\nActivation = "+activation
+                            +"\nNumber of Tests Unconverged = "+(numIter-numConv)
                             +"\nNumber of Tests Converged = "+numConv
                             +"\nConvergence Ratio = "+ratioConv
                             +"\nSlowest Convergence (out of all converged) = "+highestK+" Epochs"

@@ -1,7 +1,10 @@
 package avzero07.reinforcementlearning;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -10,11 +13,20 @@ import java.util.concurrent.ThreadLocalRandom;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.1.1
+ * @version 0.1.5
  */
 
 /*
 Changelog
+---------------
+Version 0.1.5
+---------------
+Date 19-Oct-2019
+- Implemented tanHyper()
+    --- Added toggle t=2 for computeActivation() and computeActivationDeriv()
+- Implemented saveWeights()
+    --- Writes the weight matrices to specified path
+    --- Current implementation requires path to exist
 ---------------
 Version 0.1.1
 ---------------
@@ -166,16 +178,24 @@ public class NeuralNet implements NeuralNetInterface{
     @Override
     public double sigmoid(double x) { return (1/(1+Math.pow(Math.E,-1*x))); }
 
+    @Override
+    public double tanHyper(double x) {
+        return Math.tanh(x);
+    }
+
     /*
     * Implements the general activation function
-    * which calls either sigmoid or bipSigmoid based
+    * which calls either sigmoid, bipSigmoid or tanHyper based
     * on the toggle.
     *
+    * 1 = bipSigmoid()
+    * 2 = tanHyper()
     * Default is sigmoid()
     * */
     @Override
     public double computeActivation(double y, int t) {
         if(t==1) return bipSigmoid(y);
+        if(t==2) return tanHyper(y);
         else return sigmoid(y);
     }
 
@@ -184,6 +204,8 @@ public class NeuralNet implements NeuralNetInterface{
      * which calls the appropriate function related to either sigmoid or
      * bipSigmoid based on the toggle.
      *
+     * 1 = derivative of bipSigmoid()
+     * 2 = derivative of tanHyper()
      * Default is sigmoid()
      *
      * NOTE: x is f(x) for the appropriate sigmoid. sigmoid() or
@@ -192,6 +214,7 @@ public class NeuralNet implements NeuralNetInterface{
     @Override
     public double computeActivationDeriv(double y, int t) {
         if(t==1) return (0.5*(1+y)*(1-y));
+        if(t==2) return (1-Math.pow(y,2));
         else return (y*(1-y));
     }
 
@@ -391,9 +414,65 @@ public class NeuralNet implements NeuralNetInterface{
         return 0;
     }
 
+    /*
+    * This method will save the weights of the NeuralNet object to
+    * two files in the specified directory. One file each for the
+    * two weight matrices (this.weightsInput and this.weightsOutput)
+    * */
     @Override
-    public void saveWeights(File argFile) {
+    public void saveWeights(String pathToDirectory, String identifier) {
 
+        String pathToDirectory1 = pathToDirectory+identifier+"IP_to_Hidden_Weights.txt";
+        String pathToDirectory2 = pathToDirectory+identifier+"Hidden_to_OP_Weights.txt";
+
+        String textIpHidden = "";
+        String textHiddenOp = "";
+
+        //Write The First Matrix
+        for(int i=0;i<=(argNumInputs);i++){
+            for(int j=0;j<(argNumHidden);j++){
+                textIpHidden = textIpHidden + this.weightsInput[i][j] + "\t";
+            }
+            textIpHidden = textIpHidden+"\n";
+        }
+
+        BufferedWriter writer1 = null;
+        try {
+            writer1 = new BufferedWriter(new FileWriter(pathToDirectory1));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            writer1.write(textIpHidden,0,textIpHidden.length());
+            writer1.close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //Write The Second Matrix
+        for(int i=0;i<=(argNumHidden);i++){
+            for(int j=0;j<(argNumOutputs);j++){
+                textHiddenOp = textHiddenOp + this.weightsOutput[i][j] + "\t";
+            }
+            textHiddenOp = textHiddenOp+"\n";
+        }
+
+        BufferedWriter writer2 = null;
+        try {
+            writer2 = new BufferedWriter(new FileWriter(pathToDirectory2));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            writer2.write(textHiddenOp,0,textHiddenOp.length());
+            writer2.close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

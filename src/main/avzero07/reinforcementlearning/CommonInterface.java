@@ -8,11 +8,17 @@ import java.io.IOException;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.1.0
+ * @version 0.1.5
  */
 
 /*
 Changelog
+---------------
+Version 0.1.5
+---------------
+Date 19-Oct-2019
+- Updated saveWeights()
+    --- New parameters for destination path and identifier
 ---------------
 Version 0.1.0
 ---------------
@@ -59,9 +65,10 @@ public interface CommonInterface {
     /**
      * Writes the LUT or NN Weights to a File. Design Headers (first 2 lines)
      * to specify NN or LUT to make load more meaningful.
-     * @param argFile Object of File Class
+     * @param pathToDirectory specifies the directory to where files will be written
+     * @param identifier to name the files appropriately
      */
-    public void saveWeights(File argFile);
+    public void saveWeights(String pathToDirectory, String identifier);
 
     /**
      * Load the LUT or NN from a file. Check the headers first to determine whether

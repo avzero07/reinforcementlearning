@@ -10,11 +10,18 @@ import java.util.concurrent.ThreadLocalRandom;
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.1.0
+ * @version 0.1.1
  */
 
 /*
 Changelog
+---------------
+Version 0.1.1
+---------------
+Date 19-Oct-2019
+- Fully functional version
+- Fixed critical bug in propagateBackwardHidden()
+    -- Derivative term was incorrectly getting multiplied with y
 ---------------
 Version 0.1.0
 ---------------
@@ -298,7 +305,7 @@ public class NeuralNet implements NeuralNetInterface{
                 wDelta = wDelta + (w*del);
             }
             double y = this.intermediateOutput[i];
-            this.intermediateDelta[i] = wDelta*y*this.computeActivationDeriv(y,t);
+            this.intermediateDelta[i] = wDelta*this.computeActivationDeriv(y,t);
         }
     }
 

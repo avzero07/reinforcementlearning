@@ -3,7 +3,7 @@ package avzero07.reinforcementlearning;
 /**
  * Implementation Class for Back-propagation Learning
  *
- * Assignment 1.a) Using Binary Representation with momentum 0.0
+ * Assignment 1.c) Using Bipolar Representation and momentum 0.9
  *
  * @date 19-October-2019
  * @author avzero07 (Akshay V)
@@ -12,21 +12,18 @@ package avzero07.reinforcementlearning;
  */
 
 /*
+*
 Changelog
 ---------------
 Version 0.5
 ---------------
 Date 19-Oct-2019
-- Fixed bug with output pattern representation
-- Converges sometimes for Binary XOR
----------------
-Version 0.1
----------------
-Date 19-Oct-2019
-- Initial implementation
+- Initial Implementation
+- Running without issues
+- Fastest convergence for Bipolar XOR out of all 3
 * */
 
-public class BackPropagationLearning1 {
+public class BackPropagationLearning3 {
 
     public static void main(String[] args){
 
@@ -35,28 +32,26 @@ public class BackPropagationLearning1 {
         *
         * XOR
         *
-        * Representation: Binary
+        * Representation: Bipolar
         * x1       x2      y
-        * 0        0       0
-        * 0        1       1
-        * 1        0       1
-        * 1        1       0
-        *
+        * -1      -1      -1
+        * -1       1       1
+        *  1      -1       1
+        *  1       1      -1
         * */
 
-        double[][] x = {{0,0},{0,1},{1,0},{1,1}};
-        double[][] y = {{0},{1},{1},{0}};
+        double[][] x = {{-1,-1},{-1,1},{1,-1},{1,1}};
+        double[][] y = {{-1},{1},{1},{-1}};
 
         /*
         * Specify the fields and parameters to use
         * */
-
         int numInputNeurons = 2;
         int numHiddenNeurons = 4;
         int numOutputNeurons = 1;
 
         double learningRate = 0.2;
-        double momentum = 0.0;
+        double momentum = 0.9;
 
         double argA = 0;
         double argB = 0;
@@ -68,7 +63,7 @@ public class BackPropagationLearning1 {
         *
         * Default (t!=1) : Sigmoid
         * */
-        int t = 0;
+        int t = 1;
 
         /*
         * Total Error, E = 0.5 * sum(yp - cp)^2
@@ -83,17 +78,17 @@ public class BackPropagationLearning1 {
         * Instantiate and Initialize NeuralNet object
         * All relevant data structures for nn1 will be created
         * */
-        NeuralNet nn1 = new NeuralNet(numInputNeurons, numHiddenNeurons, numOutputNeurons, learningRate, momentum, argA, argB);
+        NeuralNet nn2 = new NeuralNet(numInputNeurons, numHiddenNeurons, numOutputNeurons, learningRate, momentum, argA, argB);
 
         /*
         * Start implementation of the BP Learning Algorithm
         * */
 
         //Step 1: Initialize Weights
-        nn1.initWeights(-0.5,0.5);
+        nn2.initWeights(-0.5,0.5);
 
-        //disp2D(nn1.weightsInput,nn1.argNumInputs+1,nn1.argNumHidden);
-        //disp2D(nn1.weightsOutput,nn1.argNumHidden+1,nn1.argNumOutputs);
+        //disp2D(nn2.weightsInput,nn2.argNumInputs+1,nn1.argNumHidden);
+        //disp2D(nn2.weightsOutput,nn2.argNumHidden+1,nn1.argNumOutputs);
 
         //Step 2: Start iteration through the list of input patterns
 
@@ -110,25 +105,25 @@ public class BackPropagationLearning1 {
             for(int i=0;i<x.length;i++){
 
                 //Perform Forward Propagation
-                nn1.propagateForward(x[i],t);
+                nn2.propagateForward(x[i],t);
 
                 /*
                 * Perform Back Propagation in Output Layer
                 * to generate finalDelta
                 * */
-                nn1.propagateBackwardOutput(y[i],t);
+                nn2.propagateBackwardOutput(y[i],t);
 
                 //Update weights in the hidden to output layer
-                nn1.weightUpdateOutput(learningRate,momentum);
+                nn2.weightUpdateOutput(learningRate,momentum);
 
                 /*
-                 * Perform Back Propagation in hidden layer
-                 * to generate intermediateDelta
-                 * */
-                nn1.propagateBackwardHidden(t);
+                * Perform Back Propagation in hidden layer
+                * to generate intermediateDelta
+                * */
+                nn2.propagateBackwardHidden(t);
 
                 //Update weights in the input to hidden layer
-                nn1.weightUpdateHidden(learningRate,momentum,x[i]);
+                nn2.weightUpdateHidden(learningRate,momentum,x[i]);
 
                 /*
                 * At this point a single pattern has been
@@ -141,7 +136,7 @@ public class BackPropagationLearning1 {
 
                 //disp1D(nn1.finalOutput,nn1.finalOutput.length);
 
-                E = E + Math.pow((nn1.finalOutput[0] - y[i][0]),2);
+                E = E + Math.pow((nn2.finalOutput[0] - y[i][0]),2);
             }
 
             //Halving the computed total error for an Epoch per the formula
@@ -152,9 +147,6 @@ public class BackPropagationLearning1 {
             if(E<0.05)
                 break;
         }
-
-        //disp2D(nn1.weightsInput,nn1.argNumInputs+1,nn1.argNumHidden);
-        //disp2D(nn1.weightsOutput,nn1.argNumHidden+1,nn1.argNumOutputs);
     }
 
     /*
@@ -188,3 +180,4 @@ public class BackPropagationLearning1 {
         System.out.println("");
     }
 }
+

@@ -1,5 +1,13 @@
 package avzero07.reinforcementlearning;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 /**
  * Implementation Class for Back-propagation Learning
  *
@@ -28,7 +36,7 @@ Date 19-Oct-2019
 
 public class BackPropagationLearning1 {
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws IOException {
 
         /*
         * Training Data
@@ -85,73 +93,85 @@ public class BackPropagationLearning1 {
         * */
         NeuralNet nn1 = new NeuralNet(numInputNeurons, numHiddenNeurons, numOutputNeurons, learningRate, momentum, argA, argB);
 
-        /*
-        * Start implementation of the BP Learning Algorithm
-        * */
+        int loop = 5;
 
-        //Step 1: Initialize Weights
-        nn1.initWeights(-0.5,0.5);
+        while(loop!=0){
 
-        //disp2D(nn1.weightsInput,nn1.argNumInputs+1,nn1.argNumHidden);
-        //disp2D(nn1.weightsOutput,nn1.argNumHidden+1,nn1.argNumOutputs);
+            /*
+            * Start implementation of the BP Learning Algorithm
+            * */
 
-        //Step 2: Start iteration through the list of input patterns
+            //Step 1: Initialize Weights
+            nn1.initWeights(-0.5,0.5);
 
-        /*
-        * Break from the while loop when Total Error, E is acceptable
-        * */
+            //disp2D(nn1.weightsInput,nn1.argNumInputs+1,nn1.argNumHidden);
+            //disp2D(nn1.weightsOutput,nn1.argNumHidden+1,nn1.argNumOutputs);
 
-        //Track Epoch using k
-        int k = 0;
+            //Step 2: Start iteration through the list of input patterns
 
-        while(true){
-            k++;
+            /*
+            * Break from the while loop when Total Error, E is acceptable
+            * */
 
-            for(int i=0;i<x.length;i++){
+            loop--;
+            //Track Epoch using k
+            int k = 0;
+            String s = "\n";
+            while(true){
+                k++;
 
-                //Perform Forward Propagation
-                nn1.propagateForward(x[i],t);
+                for(int i=0;i<x.length;i++){
 
-                /*
-                * Perform Back Propagation in Output Layer
-                * to generate finalDelta
-                * */
-                nn1.propagateBackwardOutput(y[i],t);
+                    //Perform Forward Propagation
+                    nn1.propagateForward(x[i],t);
 
-                //Update weights in the hidden to output layer
-                nn1.weightUpdateOutput(learningRate,momentum);
+                    /*
+                     * Perform Back Propagation in Output Layer
+                     * to generate finalDelta
+                     * */
+                    nn1.propagateBackwardOutput(y[i],t);
 
-                /*
-                 * Perform Back Propagation in hidden layer
-                 * to generate intermediateDelta
-                 * */
-                nn1.propagateBackwardHidden(t);
+                    //Update weights in the hidden to output layer
+                    nn1.weightUpdateOutput(learningRate,momentum);
 
-                //Update weights in the input to hidden layer
-                nn1.weightUpdateHidden(learningRate,momentum,x[i]);
+                    /*
+                     * Perform Back Propagation in hidden layer
+                     * to generate intermediateDelta
+                     * */
+                    nn1.propagateBackwardHidden(t);
 
-                /*
-                * At this point a single pattern has been
-                * propagated through the NeuralNet nn1 and
-                * it's weights have been updated using the
-                * Back Propagation algorithm
-                *
-                * Next Step is to compute the Total Error
-                * */
+                    //Update weights in the input to hidden layer
+                    nn1.weightUpdateHidden(learningRate,momentum,x[i]);
 
-                //disp1D(nn1.finalOutput,nn1.finalOutput.length);
+                    /*
+                     * At this point a single pattern has been
+                     * propagated through the NeuralNet nn1 and
+                     * it's weights have been updated using the
+                     * Back Propagation algorithm
+                     *
+                     * Next Step is to compute the Total Error
+                     * */
 
-                E = E + Math.pow((nn1.finalOutput[0] - y[i][0]),2);
+                    //disp1D(nn1.finalOutput,nn1.finalOutput.length);
+
+                    E = E + Math.pow((nn1.finalOutput[0] - y[i][0]),2);
+                }
+
+                //Halving the computed total error for an Epoch per the formula
+                E = 0.5*E;
+
+                s = s + "\n"+k+", "+E;
+                System.out.println("Epoch : "+k+" Total Error : "+E);
+
+                if(E<0.05)
+                    break;
+                if(k>100000)
+                    break;
             }
-
-            //Halving the computed total error for an Epoch per the formula
-            E = 0.5*E;
-
-            System.out.println("Epoch : "+k+" Total Error : "+E);
-
-            if(E<0.05)
-                break;
+            writeToFile("C:/Users/Akshay/Desktop/Reinforcement Learning Data/Q1A/"+loop+"."+k+".txt",s);
         }
+
+        //writeToFile("C:/Users/Akshay/Desktop/Reinforcement Learning Data/sample.txt",s);
 
         //disp2D(nn1.weightsInput,nn1.argNumInputs+1,nn1.argNumHidden);
         //disp2D(nn1.weightsOutput,nn1.argNumHidden+1,nn1.argNumOutputs);
@@ -186,5 +206,12 @@ public class BackPropagationLearning1 {
             System.out.print(array[i]+" ");
         }
         System.out.println("");
+    }
+
+    public static void writeToFile(String path, String text) throws IOException {
+        Charset charSet = Charset.forName("US-ASCII");
+        BufferedWriter writer = new BufferedWriter(new FileWriter(path));
+        writer.write(text,0,text.length());
+        writer.close();
     }
 }

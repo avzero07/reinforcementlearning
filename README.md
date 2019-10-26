@@ -1,4 +1,4 @@
-# Reinforcement Learning Project
+# Reinforcement Learning
 The goal of the project is to build a learning agent using principles of reinforcement learning. The learning agent will, in this case, be a custom robot tank which learn to fight in RoboCode.
 
 # Language : Java
@@ -39,3 +39,5 @@ The goal of Phase 2 is to develop methods that can be used to implement the Temp
 
 ## Phase 3
 The goal of Phase 3 is to make use of the results of Phase 1 and Phase 2 in an effort to make the custom Robot "intelligent". That is, incorporate Error Backpropagation in the TD algorithm.
+### Putting it all together
+#### Status : Pending Phase 2 Completion

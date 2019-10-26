@@ -23,7 +23,7 @@ The goal of Phase 1 is to develop methods that can be used to deploy a 3 layer A
 - Use methods to build a 3 layer ANN and test it on the XOR Problem
 
 ## Phase 2
-The goal of Phase 2 is to develop methods that can be used to implement the Temporal Difference Algorithm (TD) using Look Up Tables (LUT). This will then be used to 
+The goal of Phase 2 is to develop methods that can be used to implement the Temporal Difference Algorithm (TD) using Look Up Tables (LUT). This will then be used to train a custom robot tank in RoboCode.
 ### Reinforcement Learning : The Temporal Difference Algorithm
 #### Status : In Progress
 #### Milestones

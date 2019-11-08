@@ -517,13 +517,81 @@ public class NeuralNet_Test {
     }
 
     /*
+    * Full Test
+    * */
+    @Test
+    public void fullTest(){
+        //double[][] x = {{-1,-1},{-1,1},{1,-1},{1,1}};
+        //double[][] y = {{-1},{1},{1},{-1}};
+
+        double[][] x = {{0,0},{0,1},{1,0},{1,1}};
+        double[][] y = {{0},{1},{1},{0}};
+
+        int numInputNeurons = 2;
+        int numHiddenNeurons = 4;
+        int numOutputNeurons = 1;
+
+        double learningRate = 0.2;
+        double momentum = 0.0;
+
+        double argA = 0;
+        double argB = 0;
+
+        int t = 0;
+
+        NeuralNet nn2 = new NeuralNet(numInputNeurons, numHiddenNeurons, numOutputNeurons, learningRate, momentum, argA, argB);
+
+        Double[][] testWeightsIPtoHid = {{-0.3378,0.2771,0.2859,-0.3329},
+                                         {0.1970,0.3191,-0.1448,0.3594},
+                                         {0.3099,0.1904,-0.0347,-0.4861}};
+        Double[][] testWeightsHidToOP = {{-0.1401},
+                                         {0.4919},
+                                         {-0.2913},
+                                         {-0.3979},
+                                         {0.3581}};
+        //Fill these weights in the NN
+        for(int i=0;i<(argNumInputs+1);i++){
+            for(int j=0;j<(argNumHidden);j++){
+                nn2.weightsInput[i][j] = testWeightsIPtoHid[i][j];
+            }
+        }
+
+        for(int i=0;i<(argNumHidden+1);i++){
+            for(int j=0;j<(argNumOutputs);j++){
+                nn2.weightsOutput[i][j] = testWeightsHidToOP[i][j];
+            }
+        }
+
+        //dispWeightMatrix(nn2);
+
+        Double E = 100.0;
+        int e = 0;
+        //Run Epochs
+        while(E>0.05 && e<100000){
+            e++;
+            for(int i=0;i<x.length;i++){
+                nn2.propagateForward(x[i],t);
+                nn2.propagateBackwardOutput(y[i],t);
+                nn2.weightUpdateOutput(learningRate,momentum);
+                nn2.propagateBackwardHidden(t);
+                nn2.weightUpdateHidden(learningRate,momentum,x[i]);
+
+                E = E + Math.pow((nn2.finalOutput[0] - y[i][0]),2);
+            }
+            E = 0.5*E;
+        }
+        //System.out.println(e);
+        Assert.assertEquals(0.0,E,0.05);
+    }
+
+    /*
     * Utility methods to help debug
     * */
 
     /*
     * Method to display weightMatrices
     * */
-    public void dispWeightMatrix(){
+    public void dispWeightMatrix(NeuralNet nn){
         for(int i=0;i<(nn.argNumInputs+1);i++){
             for(int j=0;j<(nn.argNumHidden);j++){
                 System.out.print(nn.weightsInput[i][j]+" ");

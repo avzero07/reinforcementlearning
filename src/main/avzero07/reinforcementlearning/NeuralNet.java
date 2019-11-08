@@ -230,17 +230,16 @@ public class NeuralNet implements NeuralNetInterface{
     @Override
     public void initWeights(double lowerBound, double upperBound) {
         /*
-        *Fill this.weightsInput with random values between lowerBound and upperBound (Inclusive)
+        *Fill this.weightsInput with random values between lowerBound and upperBound (Exclusive of upper bound)
          * */
         for(int i=0;i<(this.argNumInputs+1);i++){
             for(int j=0;j<(this.argNumHidden);j++){
-                double random = ThreadLocalRandom.current().nextDouble(lowerBound,upperBound);
-                this.weightsInput[i][j] = random;
+                this.weightsInput[i][j] = ThreadLocalRandom.current().nextDouble(lowerBound,upperBound);
             }
         }
 
         /*
-         *Fill this.weightsOutput with random values between lowerBound and upperBound (Inclusive)
+         *Fill this.weightsOutput with random values between lowerBound and upperBound (Exclusive of upper bound)
          * */
         for(int i=0;i<(this.argNumHidden+1);i++){
             for(int j=0;j<(this.argNumOutputs);j++){
@@ -340,14 +339,14 @@ public class NeuralNet implements NeuralNetInterface{
         for(int i=0;i<(this.argNumOutputs);i++){
             for(int j=0;j<(this.argNumHidden+1);j++){
                 if(j==0){
-                    double temp = this.weightsOutput[j][i];
-                    this.weightsOutput[j][i] = this.weightsOutput[j][i] + (momentum*(this.weightsOutputDiff[j][i])) + (learningRate*(this.finalDelta[i])*(1));
-                    this.weightsOutputDiff[j][i] = this.weightsOutput[j][i] - temp;
+                    double temp = (momentum*(this.weightsOutputDiff[j][i])) + (learningRate*(this.finalDelta[i])*(this.bias));
+                    this.weightsOutput[j][i] = this.weightsOutput[j][i] + temp;
+                    this.weightsOutputDiff[j][i] = temp;
                 }
                 if(j!=0){
-                    double temp = this.weightsOutput[j][i];
-                    this.weightsOutput[j][i] = this.weightsOutput[j][i] + (momentum*(this.weightsOutputDiff[j][i])) + (learningRate*(this.finalDelta[i])*(this.intermediateOutput[j-1]));
-                    this.weightsOutputDiff[j][i] = this.weightsOutput[j][i] - temp;
+                    double temp = (momentum*(this.weightsOutputDiff[j][i])) + (learningRate*(this.finalDelta[i])*(this.intermediateOutput[j-1]));
+                    this.weightsOutput[j][i] = this.weightsOutput[j][i] + temp;
+                    this.weightsOutputDiff[j][i] = temp;
                 }
             }
         }
@@ -364,17 +363,29 @@ public class NeuralNet implements NeuralNetInterface{
             for(int j=0;j<(this.argNumInputs+1);j++){
                 double temp;
                 if(j==0){
-                    temp = this.weightsInput[j][i];
-                    this.weightsInput[j][i] = this.weightsInput[j][i] + (momentum*(this.weightsInputDiff[j][i])) + (learningRate*(this.intermediateDelta[i])*(1));
-                    this.weightsInputDiff[j][i] = this.weightsInput[j][i] - temp;
+                    temp = (momentum*(this.weightsInputDiff[j][i])) + (learningRate*(this.intermediateDelta[i])*(this.bias));
+                    this.weightsInput[j][i] = this.weightsInput[j][i] + temp;
+                    this.weightsInputDiff[j][i] = temp;
                 }
                 if(j!=0){
-                    temp = this.weightsInput[j][i];
-                    this.weightsInput[j][i] = this.weightsInput[j][i] + (momentum*(this.weightsInputDiff[j][i])) + (learningRate*(this.intermediateDelta[i])*(inputPattern[j-1]));
-                    this.weightsInputDiff[j][i] = this.weightsInput[j][i] - temp;
+                    temp =  (momentum*(this.weightsInputDiff[j][i])) + (learningRate*(this.intermediateDelta[i])*(inputPattern[j-1]));
+                    this.weightsInput[j][i] = this.weightsInput[j][i] + temp;
+                    this.weightsInputDiff[j][i] = temp;
                 }
             }
         }
+    }
+
+    public void nullifyStructures(){
+        this.weightsInput = null;
+        this.weightsInputDiff = null;
+        this.weightsOutput = null;
+        this.weightsOutputDiff = null;
+
+        this.intermediateOutput = null;
+        this.intermediateDelta = null;
+        this.finalOutput = null;
+        this.finalDelta = null;
     }
 
     /*

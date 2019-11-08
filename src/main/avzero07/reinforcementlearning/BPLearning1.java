@@ -56,8 +56,8 @@ public class BPLearning1 {
 
     public static void main(String[] args) throws IOException {
 
-        double[][] x = {{0,0},{0,1},{1,0},{1,1}};
-        double[][] y = {{0},{1},{1},{0}};
+        double[][] x = {{0.0,0.0},{0.0,1.0},{1.0,0.0},{1.0,1.0}};
+        double[][] y = {{0.0},{1.0},{1.0},{0.0}};
 
         int numInputNeurons = 2;
         int numHiddenNeurons = 4;

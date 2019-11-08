@@ -56,8 +56,8 @@ public class BPLearning2 {
 
     public static void main(String[] args) throws IOException {
 
-        double[][] x = {{-1,-1},{-1,1},{1,-1},{1,1}};
-        double[][] y = {{-1},{1},{1},{-1}};
+        double[][] x = {{-1.0,-1.0},{-1.0,1.0},{1.0,-1.0},{1.0,1.0}};
+        double[][] y = {{-1.0},{1.0},{1.0},{-1.0}};
 
         int numInputNeurons = 2;
         int numHiddenNeurons = 4;
@@ -69,7 +69,7 @@ public class BPLearning2 {
         double argA = 0;
         double argB = 0;
 
-        int t = 2;
+        int t = 1;
         String activation = "";
         switch(t){
             case 1: activation = "Bipolar Sigmoid";

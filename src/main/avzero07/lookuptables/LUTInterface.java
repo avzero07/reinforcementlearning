@@ -21,7 +21,7 @@ public interface LUTInterface extends avzero07.reinforcementlearning.CommonInter
     /**
      * Used to initialize the LUT
      */
-    public void initLut();
+    public void initLut(LUT table, int type);
 
     /**
      * Translates the vector used for lookup (state-action) into

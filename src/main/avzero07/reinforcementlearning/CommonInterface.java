@@ -68,7 +68,7 @@ public interface CommonInterface {
      * @param pathToDirectory specifies the directory to where files will be written
      * @param identifier to name the files appropriately
      */
-    public void saveWeights(String pathToDirectory, String identifier);
+    public void saveWeights(String pathToDirectory, String identifier) throws IOException;
 
     /**
      * Load the LUT or NN from a file. Check the headers first to determine whether

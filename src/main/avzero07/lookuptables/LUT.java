@@ -9,14 +9,24 @@ import java.util.Scanner;
 
 /**
  * LUT Class that implements the LUTInterface.
- * @date 08-November-2019
+ * @date 09-November-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.5
+ * @version 0.0.7
  */
 
 /*
 Changelog
+---------------
+Version 0.0.7
+---------------
+- Added loaded field to LUT
+    --  loaded tracks whether weights were loaded in a given round
+    --  loaded starts out at 0 and is set to 1 at the first load (at first call of run() in a round)
+    --  Simple rules: Don't load
+- LUT Constructor Updated
+    --  Always randomizes weights. Useful for round 0
+    --  Load will ensure weights are restored in second and subsequent rounds
 ---------------
 Version 0.0.5
 ---------------
@@ -38,7 +48,7 @@ Version 0.0.1
 
 public class LUT implements LUTInterface {
 
-    int d2eLevels, myEnLevels, enEnLevels, numActions;
+    int d2eLevels, myEnLevels, enEnLevels, numActions, loaded;
     double[][][][] lookUpTable,lookUpTableTrav;
 
     /**
@@ -55,6 +65,7 @@ public class LUT implements LUTInterface {
         this.d2eLevels = d2elev;
         this.myEnLevels = myEnLev;
         this.enEnLevels = enEnLev;
+        this.loaded = 0;
 
         /*
         * Implementing 3 Actions
@@ -67,6 +78,7 @@ public class LUT implements LUTInterface {
         this.lookUpTable = new double[this.d2eLevels][this.myEnLevels][this.enEnLevels][numActions];
         this.lookUpTableTrav = new double[this.d2eLevels][this.myEnLevels][this.enEnLevels][numActions];
         this.initLutTrav(this,0);
+        this.initLut(this,1);
     }
 
     /**
@@ -159,6 +171,7 @@ public class LUT implements LUTInterface {
                         this.lookUpTable[d][men][een][act] = scan.nextDouble();
                     }
         scan.close();
+        this.loaded=1;
     }
 
     //Additional Methods

@@ -41,7 +41,7 @@ public class LUT_Test {
     int d2elev = 5;
     int myEnLev = 20;
     int enEnLev = 20;
-    int numAct = 5;
+    int numAct = 6;
 
     /**
      * Tests whether the look up table is filled with non-zeros properly

@@ -9,11 +9,16 @@ import robocode.util.Utils;
  * @date 08-November-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.1
+ * @version 0.0.5
  */
 
 /*
 Changelog
+---------------
+Version 0.0.5
+---------------
+- Implemented basic Action methods
+    --  Move (moveForward() and moveBackward()) and Turn (turnLeft() and turnRight())
 ---------------
 Version 0.0.1
 ---------------
@@ -34,6 +39,7 @@ public class RoboLUT extends AdvancedRobot {
             //takeAction();
             //getState();
             //update();
+
         }
     }
 
@@ -56,10 +62,63 @@ public class RoboLUT extends AdvancedRobot {
     }
 
     /**
-     * Method to avoid enemy bullet
+     * Simple Movement: Turn Left
      */
-    public void dodge(){
+    public void turnLeft(){
+        setTurnLeft(90);
+    }
 
+    /**
+     * Simple Movement: Turn Right
+     */
+    public void turnRight(){
+        setTurnRight(90);
+    }
+
+    /**
+     * Simple Movement: Move Forward
+     */
+    public void moveForward(){
+        ahead(50);
+    }
+
+    /**
+     * Simple Movement: Move Back
+     */
+    public void moveBackward(){
+        back(50);
+    }
+
+    /**
+     * Method to move around
+     */
+    public void moveComplex(){
+        double x = getX();
+        double y = getY();
+
+        double height = getBattleFieldHeight();
+        double width = getBattleFieldWidth();
+
+        double heading = getHeading();
+        //Q 1
+        if((x>=width/2)&&(y>=height/2)){
+
+        }
+
+        //Q 2
+        if((x<width/2)&&(y>=height/2)){
+
+        }
+
+        //Q 3
+        if((x<width/2)&&(y<height/2)){
+
+        }
+
+        //Q 4
+        if((x>=height/2)&&(y<height/2)){
+
+        }
     }
 
 
@@ -67,6 +126,6 @@ public class RoboLUT extends AdvancedRobot {
      * Method to fire
      */
     public void shoot(){
-
+        fire(1);
     }
 }

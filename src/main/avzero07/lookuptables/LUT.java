@@ -27,6 +27,9 @@ Version 0.0.5
     --  Passes Tests
 - Implemented load()
     -- Passes Tests
+- Corrected LUT by adding Action
+    -- Corrected all methods
+    -- Passing all Tests
 ---------------
 Version 0.0.1
 ---------------
@@ -35,22 +38,34 @@ Version 0.0.1
 
 public class LUT implements LUTInterface {
 
-    int d2eLevels, myEnLevels, enEnLevels;
-    double[][][] lookUpTable,lookUpTableTrav;
+    int d2eLevels, myEnLevels, enEnLevels, numActions;
+    double[][][][] lookUpTable,lookUpTableTrav;
 
     /**
      * Constructor Method for LUT. Choosing to implement as an Array
      * Later improvement will upgrade this to a Hash Table
      */
-    public LUT(int d2elev, int myEnLev, int enEnLev){
+    public LUT(int d2elev, int myEnLev, int enEnLev, int numActions){
+
+        /*
+        * Implementing 3 States
+        * */
         //this.posXLevels = posXlev;
         //this.posYLevels = posYlev;
         this.d2eLevels = d2elev;
         this.myEnLevels = myEnLev;
         this.enEnLevels = enEnLev;
 
-        this.lookUpTable = new double[this.d2eLevels][this.myEnLevels][this.enEnLevels];
-        this.lookUpTableTrav = new double[this.d2eLevels][this.myEnLevels][this.enEnLevels];
+        /*
+        * Implementing 3 Actions
+        * 0 -- Scan
+        * 1 -- Move
+        * 2 -- Shoot
+        * */
+        this.numActions = numActions;
+
+        this.lookUpTable = new double[this.d2eLevels][this.myEnLevels][this.enEnLevels][numActions];
+        this.lookUpTableTrav = new double[this.d2eLevels][this.myEnLevels][this.enEnLevels][numActions];
         this.initLutTrav(this,0);
     }
 
@@ -66,10 +81,11 @@ public class LUT implements LUTInterface {
 
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.myEnLevels; men++)
-                for (int een = 0; een < table.enEnLevels; een++) {
-                    fill = (type == 0) ? 0 : Math.random();
-                    table.lookUpTable[d][men][een] = fill;
-                }
+                for (int een = 0; een < table.enEnLevels; een++)
+                    for(int act=0;act<this.numActions;act++){
+                        fill = (type == 0) ? 0 : Math.random();
+                        table.lookUpTable[d][men][een][act] = fill;
+                    }
     }
 
     /**
@@ -83,10 +99,11 @@ public class LUT implements LUTInterface {
 
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.myEnLevels; men++)
-                for (int een = 0; een < table.enEnLevels; een++) {
-                    fill = (type == 0) ? 0 : Math.random();
-                    table.lookUpTableTrav[d][men][een] = fill;
-                }
+                for (int een = 0; een < table.enEnLevels; een++)
+                    for(int act = 0; act < table.numActions; act++){
+                        fill = (type == 0) ? 0 : Math.random();
+                        table.lookUpTableTrav[d][men][een][act] = fill;
+                    }
     }
 
     @Override
@@ -116,9 +133,10 @@ public class LUT implements LUTInterface {
 
         for (int d = 0; d < this.d2eLevels; d++)
             for (int men = 0; men < this.enEnLevels; men++) {
-                for (int een = 0; een < this.enEnLevels; een++) {
-                    op = op + this.lookUpTable[d][men][een] + " ";
-                }
+                for (int een = 0; een < this.enEnLevels; een++)
+                    for(int act = 0; act < this.numActions; act++){
+                        op = op + this.lookUpTable[d][men][een][act] + " ";
+                    }
                 op = op + "\n";
             }
 
@@ -136,9 +154,10 @@ public class LUT implements LUTInterface {
 
         for (int d = 0; d < this.d2eLevels; d++)
             for (int men = 0; men < this.enEnLevels; men++)
-                for (int een = 0; een < this.enEnLevels; een++) {
-                    this.lookUpTable[d][men][een] = scan.nextDouble();
-                }
+                for (int een = 0; een < this.enEnLevels; een++)
+                    for(int act = 0; act < this.numActions; act++){
+                        this.lookUpTable[d][men][een][act] = scan.nextDouble();
+                    }
         scan.close();
     }
 

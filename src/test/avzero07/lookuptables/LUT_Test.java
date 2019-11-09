@@ -27,6 +27,7 @@ Version 0.0.5
 - Implemented Test for initLutTrav()
 - Implemented Test for saveWeights()
 - Implemented Test for load()
+- Corrected Tests to account for Actions
 ---------------
 Version 0.0.1
 ---------------
@@ -40,20 +41,22 @@ public class LUT_Test {
     int d2elev = 5;
     int myEnLev = 20;
     int enEnLev = 20;
+    int numAct = 3;
 
     /**
      * Tests whether the look up table is filled with non-zeros properly
      */
     @Test
     public void fillTestRand(){
-        LUT table = new LUT(d2elev, myEnLev, enEnLev);
+        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct);
         double sum = 0;
         table.initLut(table,1);
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.enEnLevels; men++)
-                for (int een = 0; een < table.enEnLevels; een++) {
-                    sum = sum + table.lookUpTable[d][men][een];
-                }
+                for (int een = 0; een < table.enEnLevels; een++)
+                    for(int act = 0; act < table.numActions; act++){
+                        sum = sum + table.lookUpTable[d][men][een][act];
+                    }
         Assert.assertNotEquals(0,sum,0);
     }
 
@@ -62,14 +65,15 @@ public class LUT_Test {
      */
     @Test
     public void fillTestZero(){
-        LUT table = new LUT(d2elev, myEnLev, enEnLev);
+        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct);
         double sum = 0;
         table.initLut(table,0);
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.enEnLevels; men++)
-                for (int een = 0; een < table.enEnLevels; een++) {
-                    sum = sum + table.lookUpTable[d][men][een];
-                }
+                for (int een = 0; een < table.enEnLevels; een++)
+                    for(int act = 0; act < table.numActions; act++){
+                        sum = sum + table.lookUpTable[d][men][een][act];
+                    }
         Assert.assertEquals(0,sum,0);
     }
 
@@ -78,13 +82,14 @@ public class LUT_Test {
      */
     @Test
     public void fillTravZero(){
-        LUT table = new LUT(d2elev, myEnLev, enEnLev);
+        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct);
         double sum = 0;
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.enEnLevels; men++)
-                for (int een = 0; een < table.enEnLevels; een++) {
-                    sum = sum + table.lookUpTableTrav[d][men][een];
-                }
+                for (int een = 0; een < table.enEnLevels; een++)
+                    for(int act = 0; act < table.numActions; act++){
+                        sum = sum + table.lookUpTableTrav[d][men][een][act];
+                    }
         Assert.assertEquals(0,sum,0);
     }
 
@@ -93,7 +98,7 @@ public class LUT_Test {
      */
     @Test
     public void testSave() throws IOException {
-        LUT table = new LUT(d2elev, myEnLev, enEnLev);
+        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct);
         table.initLut(table,1);
         String path = "C:/Users/Akshay/AppData/Local/Temp/LUT_Test";
         table.saveWeights(path,"test-file");
@@ -101,13 +106,14 @@ public class LUT_Test {
         File f = new File(path+"/test-file.txt");
         Scanner scan = new Scanner(f);
 
-        double[][][] loaded = new double[d2elev][myEnLev][enEnLev];
+        double[][][][] loaded = new double[d2elev][myEnLev][enEnLev][numAct];
 
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.enEnLevels; men++)
-                for (int een = 0; een < table.enEnLevels; een++) {
-                    loaded[d][men][een] = scan.nextDouble();
-                }
+                for (int een = 0; een < table.enEnLevels; een++)
+                    for(int act = 0; act < table.numActions; act++){
+                        loaded[d][men][een][act] = scan.nextDouble();
+                    }
         scan.close();
         f.delete();
 
@@ -120,7 +126,7 @@ public class LUT_Test {
 
     @Test
     public void testLoad() throws IOException {
-        LUT table = new LUT(d2elev, myEnLev, enEnLev);
+        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct);
         table.initLut(table,1);
         String path = "C:/Users/Akshay/AppData/Local/Temp/LUT_Test";
         table.saveWeights(path,"test-file");
@@ -132,9 +138,10 @@ public class LUT_Test {
         double sum = 0;
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.enEnLevels; men++)
-                for (int een = 0; een < table.enEnLevels; een++) {
-                    sum = sum + table.lookUpTable[d][men][een];
-                }
+                for (int een = 0; een < table.enEnLevels; een++)
+                    for(int act = 0; act < table.numActions; act++){
+                        sum = sum + table.lookUpTable[d][men][een][act];
+                    }
         Assert.assertNotEquals(0,sum,0);
     }
 

@@ -145,8 +145,32 @@ public class LUT_Test {
         Assert.assertNotEquals(0,sum,0);
     }
 
+    @Test
+    public void testQuant(){
+        //Remember that Energy can go above 100
+        double val = 120;
+        int numLev = 20;
+        double lowerBound = 0;
+        double upperBound = 100;
+
+        int res = quantize(val,numLev,lowerBound,upperBound);
+        System.out.println(res);
+        //Assert.assertEquals(11,res);
+    }
+
     /**
      * Additional Methods
      */
+    public static int quantize(double val, int levels, double lowerBound, double upperBound){
+        int res = 0;
 
+        if(val>upperBound)
+            val = upperBound;
+
+        double rat = val/(upperBound-lowerBound);
+        double temp = rat*(levels-1);
+        res = (int) Math.round(temp);
+
+        return res;
+    }
 }

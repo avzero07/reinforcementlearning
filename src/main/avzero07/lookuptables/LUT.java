@@ -23,10 +23,13 @@ Version 0.0.7
 - Added loaded field to LUT
     --  loaded tracks whether weights were loaded in a given round
     --  loaded starts out at 0 and is set to 1 at the first load (at first call of run() in a round)
-    --  Simple rules: Don't load
+    --  Simple rules: Don't load in round 0
+- Added upper and lower Bound arrays for States
+    -- Useful for dynamically quantizing sensed state values
 - LUT Constructor Updated
     --  Always randomizes weights. Useful for round 0
     --  Load will ensure weights are restored in second and subsequent rounds
+    --  Sets values in the upper and lower bound arrays
 ---------------
 Version 0.0.5
 ---------------
@@ -49,6 +52,7 @@ Version 0.0.1
 public class LUT implements LUTInterface {
 
     int d2eLevels, myEnLevels, enEnLevels, numActions, loaded;
+    double[] lowerBound, upperBound;
     double[][][][] lookUpTable,lookUpTableTrav;
 
     /**
@@ -66,6 +70,24 @@ public class LUT implements LUTInterface {
         this.myEnLevels = myEnLev;
         this.enEnLevels = enEnLev;
         this.loaded = 0;
+        this.lowerBound = new double[3];
+        this.upperBound = new double[3];
+
+        for(int i = 0; i < 3; i++){
+            this.lowerBound[i] = 0;
+
+            int up = 0;
+
+            switch(i){
+                case 0: up = 1000;
+                break;
+                case 1: up = 100;
+                break;
+                case 2: up = 100;
+                break;
+            }
+            this.upperBound[i] = up;
+        }
 
         /*
         * Implementing 3 Actions

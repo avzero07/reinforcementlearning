@@ -3,12 +3,13 @@ package avzero07.lookuptables;
 import robocode.*;
 import robocode.util.Utils;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.Buffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -34,6 +35,7 @@ Version 0.0.7
     --  Passes test
     --  Corrected severe BUG (n levels with n+1 labels)
 - First implementation of Off Policy Q Learning
+- Decent Firing mechanic
 ---------------
 Version 0.0.5
 ---------------
@@ -51,11 +53,15 @@ public class RoboLUT extends AdvancedRobot {
     /*
     * Start defining global variables
     * */
-    static double epsilon = 0.2;    //(1-e) Probability of picking greedily
-    static double gamma = 0.5;      //Discount Factor
+    static double epsilon = 0;    //(1-e) Probability of picking greedily
+    static double gamma = 0.9;      //Discount Factor
     static double alpha = 0.2;      //Step Size
     static double reward = 0;       //Tracks the instantaneous reward. Should be reset after update
     static double aggReward = 0;    //Tracks the aggregate reward. Resets every episode [round]
+
+    static boolean win = false;
+    static int winCount = 0;
+    static int aggWinCount = 0;
 
     /*
     * States
@@ -72,8 +78,8 @@ public class RoboLUT extends AdvancedRobot {
     * 5. Shoot
     * */
     static int d2eLevels = 5;
-    static int myEnLevels = 20;
-    static int enEnLevels = 20;
+    static int myEnLevels = 16;
+    static int enEnLevels = 16;
     static int numActions = 5;
 
     //int round = getRoundNum();
@@ -85,6 +91,7 @@ public class RoboLUT extends AdvancedRobot {
     String pathToBattle = "C:/Users/Akshay/Desktop/Robocode Runtime/";
     String temp = "C:/Users/Akshay/Desktop/Robocode Runtime/";
     String loadTemp = "C:/Users/Akshay/Desktop/Robocode Runtime/tmp.txt";
+    String resPath = "C:/Users/Akshay/Desktop/Robocode Runtime/ScoreResult.txt";
 
     //Instantiate State Objects
     State s1;           //Current State : State before action
@@ -189,9 +196,19 @@ public class RoboLUT extends AdvancedRobot {
         //double radarTurn = getHeadingRadians() + e.getBearingRadians() - getRadarHeadingRadians();
         //setTurnRadarRightRadians(Utils.normalRelativeAngle(radarTurn));
 
+        //setTurnGunLeft(getHeading() - getGunHeading() + normalizeBearing(e.getBearing()));
+
+        double absoluteBearing = getHeadingRadians() + e.getBearingRadians();
+        setTurnGunRightRadians(Utils.normalRelativeAngle(absoluteBearing -
+                getGunHeadingRadians() + (e.getVelocity() * Math.sin(e.getHeadingRadians() -
+                absoluteBearing) / 13.0)));
+        setFire(1.0);
+
         int d2e = quantize(e.getDistance(),lut1.d2eLevels,lut1.lowerBound[0],lut1.upperBound[0]);
         int myEn = quantize(getEnergy(),lut1.myEnLevels,lut1.lowerBound[1],lut1.upperBound[1]);
         int enEn = quantize(e.getEnergy(),lut1.enEnLevels,lut1.lowerBound[2],lut1.upperBound[2]);
+
+
 
         if(firstSeek){
             s1 = new State(d2e,myEn,enEn);
@@ -227,19 +244,23 @@ public class RoboLUT extends AdvancedRobot {
     }
 
     @Override
-    public void onBulletHit(BulletHitEvent event) { reward = 0.5; }
+    public void onBulletHit(BulletHitEvent event) { reward = reward + 0.5; }
 
     @Override
-    public void onHitByBullet(HitByBulletEvent event) { reward = -0.5; }
+    public void onHitByBullet(HitByBulletEvent event) { reward = reward -0.5; }
 
     @Override
-    public void onDeath(DeathEvent event) { reward = -1; }
+    public void onDeath(DeathEvent event) { reward = reward -1; }
 
     @Override
-    public void onWin(WinEvent event) { reward = 1; }
+    public void onWin(WinEvent event) {
+        reward = reward + 1;
+        win = true;
+        winCount++;
+    }
 
     @Override
-    public void onHitWall(HitWallEvent event) { reward = -0.25; }
+    public void onHitWall(HitWallEvent event) { reward = reward -0.25; }
 
     /*
     * Start Methods for Actions
@@ -311,10 +332,21 @@ public class RoboLUT extends AdvancedRobot {
     }
 
     /**
+     * Method to return the normalized bearing
+     */
+    // normalizes a bearing to between +180 and -180
+    public static double normalizeBearing(double angle) {
+        while (angle >  180) angle -= 360;
+        while (angle < -180) angle += 360;
+        return angle;
+    }
+
+    /**
      * Method to fire
      */
     public void shoot(){
-        fire(1);
+        // if the gun is cool and we're pointed at the target, shoot!
+        execute();
     }
 
     /*

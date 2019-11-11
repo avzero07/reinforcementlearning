@@ -23,6 +23,8 @@ Version 0.0.8
 ---------------
 - Implemented randInt() and randDoub()
     --  Passes tests
+- Q Update Method
+    --  For Q Learning and SARSA with Terminal Rewards
 ---------------
 Version 0.0.7
 ---------------
@@ -172,12 +174,19 @@ public class LUT implements LUTInterface {
         * Q(S,A) <-- Q(S,A) + alpha*(R + gamma*(Q(S',A'))-Q(S,A))
         *
         * */
+
+        double q = this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][s1Action];
+        double qnew = this.lookUpTable[current.d2enemInt][current.myEnerInt][current.enEnerInt][s2Action];
+        double qup;
+
         if(ON_POLICY==true){
             if(terminal==true){
-
+                return;
             }
             if(terminal==false){
-
+                qup = q + (alpha*(reward+(gamma*qnew)-q));
+                this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][s1Action] = qup;
+                return;
             }
         }
 
@@ -187,9 +196,6 @@ public class LUT implements LUTInterface {
         * Q(S,A) <-- Q(S,A) + alpha*(R + gamma*max-a(Q(S',A))-Q(S,A))
         * */
         if(ON_POLICY==false){
-            double q = this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][s1Action];
-            double qnew = this.lookUpTable[current.d2enemInt][current.myEnerInt][current.enEnerInt][s2Action];
-            double qup;
             if(terminal==true){
                 qnew = 0;
                 qup = q + (alpha*(reward+(gamma*qnew)-q));

@@ -33,6 +33,7 @@ Version 0.0.8
 - Re-implemented Learning
     --  Q-Learning Incorporated
     --  Fixed Terminal Rewards
+    --  SARSA Incorporated
 ---------------
 Version 0.0.7
 ---------------
@@ -109,6 +110,8 @@ public class RoboLUT extends AdvancedRobot {
     State s2;                           //Next State    : State after action
     State[] stateArray = new State[2];  //Always tracks current and previous states
     int chosenAction;   //Global variable to track the chosen action
+    int prevAction;     //For Sarsa
+    int firstMove = 0;  //For Sarsa
 
 
     //Flags
@@ -146,7 +149,42 @@ public class RoboLUT extends AdvancedRobot {
 
             //SARSA (On Policy TD)
             if(ON_POLICY==true){
-                break;
+
+                //To update s1 for the first time in SARSA. Populates prevAction
+                if(firstMove==0){
+                    double chance = LUT.randDoub(0.0,1.0);
+                    int maxActionInt = lut1.maxAction(s1);  //Used later for update
+                    if(chance<=(1-epsilon)){
+                        chosenAction = maxActionInt;
+                    }
+                    else if(chance>(1-epsilon)){
+                        chosenAction = LUT.randInt(0,4); //Need to come back to this later
+                    }
+                    firstMove++;
+                    prevAction = chosenAction;
+                }
+
+                takeAction(prevAction);
+
+                //Get State Again
+                turnRadarLeft(360);
+
+                //Choose Action for new state
+                double chance = LUT.randDoub(0.0,1.0);
+                int maxActionInt = lut1.maxAction(s2);  //Used later for update
+                if(chance<=(1-epsilon)){
+                    chosenAction = maxActionInt;
+                }
+                else if(chance>(1-epsilon)){
+                    chosenAction = LUT.randInt(0,4); //Need to come back to this later
+                }
+
+                //Update Table
+                lut1.qUpdate(s2,s1,alpha,gamma,reward,chosenAction,prevAction,false,false);
+
+                prevAction = chosenAction;
+                reward = 0;
+                s1 = s2;
             }
 
             //Q-Learning (Off Policy TD)

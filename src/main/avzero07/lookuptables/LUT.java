@@ -217,14 +217,20 @@ public class LUT implements LUTInterface {
 
         int maxint=-7;
         double maxAction = -100;
-        double[] possibleActions = this.lookUpTable[s.d2enemInt][s.myEnerInt][s.enEnerInt];
-
-        for(int i=0;i<possibleActions.length;i++){
-            if(possibleActions[i]>maxAction){
-                maxAction = possibleActions[i];
-                maxint = i;
+        try{
+            double[] possibleActions = this.lookUpTable[s.d2enemInt][s.myEnerInt][s.enEnerInt];
+            for(int i=0;i<possibleActions.length;i++){
+                if(possibleActions[i]>maxAction){
+                    maxAction = possibleActions[i];
+                    maxint = i;
+                }
             }
         }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
         return maxint;
     }
 
@@ -271,7 +277,7 @@ public class LUT implements LUTInterface {
 
     //Additional Methods
     /**
-     *
+     * Method writes to file
      */
     public static void writeToFile(String path, String text) throws IOException {
         Charset charSet = Charset.forName("US-ASCII");

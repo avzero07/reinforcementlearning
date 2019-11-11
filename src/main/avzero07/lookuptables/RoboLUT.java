@@ -117,8 +117,8 @@ public class RoboLUT extends AdvancedRobot {
     //Flags
     boolean firstSeek = true;
     boolean trueFirstSeek = true;   //Will be true only once
-    boolean ON_POLICY = true;      //Used to Toggle between ON and OFF Policy Learning
-    boolean LEARNING = true;        //Used to Toggle between Learning and no Learning
+    boolean ON_POLICY = false;      //Used to Toggle between ON and OFF Policy Learning
+    boolean LEARNING = false;        //Used to Toggle between Learning and no Learning
 
     /*
     * Instantiate LUT
@@ -164,6 +164,7 @@ public class RoboLUT extends AdvancedRobot {
                     prevAction = chosenAction;
                 }
 
+                //Takes action that was previously decided
                 takeAction(prevAction);
 
                 //Get State Again
@@ -180,7 +181,9 @@ public class RoboLUT extends AdvancedRobot {
                 }
 
                 //Update Table
-                lut1.qUpdate(s2,s1,alpha,gamma,reward,chosenAction,prevAction,false,false);
+                if(LEARNING){
+                    lut1.qUpdate(s2,s1,alpha,gamma,reward,chosenAction,prevAction,true,false);
+                }
 
                 prevAction = chosenAction;
                 reward = 0;
@@ -204,7 +207,9 @@ public class RoboLUT extends AdvancedRobot {
                 turnRadarLeft(360);
 
                 int curMaxAction = lut1.maxAction(s2);
-                lut1.qUpdate(s2,s1,alpha,gamma,reward,curMaxAction,chosenAction,false,false);
+                if(LEARNING){
+                    lut1.qUpdate(s2,s1,alpha,gamma,reward,curMaxAction,chosenAction,false,false);
+                }
 
                 reward = 0;
 
@@ -282,7 +287,9 @@ public class RoboLUT extends AdvancedRobot {
     @Override
     public void onDeath(DeathEvent event) {
         reward = reward -1000;
-        lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+        if(LEARNING){
+            lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+        }
         reward = 0;
         aggReward = aggReward - 1000;
         out.println("Aggregate Reward = "+aggReward);
@@ -291,7 +298,9 @@ public class RoboLUT extends AdvancedRobot {
     @Override
     public void onWin(WinEvent event) {
         reward = reward + 1000;
-        lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+        if(LEARNING){
+            lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+        }
         reward = 0;
         aggReward = aggReward + 1000;
         win = true;

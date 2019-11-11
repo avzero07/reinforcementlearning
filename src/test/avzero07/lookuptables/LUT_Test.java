@@ -11,14 +11,18 @@ import java.util.Scanner;
 
 /**
  * Test Class for Testing the LUT class implementation
- * @date 08-November-2019
+ * @date 11-November-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.5
+ * @version 0.0.6
  */
 
 /*
 Changelog
+---------------
+Version 0.0.6
+---------------
+- Implemented Tests for randInt() and randDoub()
 ---------------
 Version 0.0.5
 ---------------
@@ -156,6 +160,90 @@ public class LUT_Test {
         int res = quantize(val,numLev,lowerBound,upperBound);
         System.out.println(res);
         //Assert.assertEquals(11,res);
+    }
+
+    @Test
+    public void testRand(){
+        int upper = 5;
+        int lower = 0;
+
+        int score = 100;
+
+        for(int i=0;i<100;i++){
+            int r = LUT.randInt(lower,upper);
+            if(r>upper || r<lower)
+                score--;
+        }
+        Assert.assertEquals(100,score);
+    }
+
+    @Test
+    public void testRandAgain(){
+        int upper = 5;
+        int lower = 0;
+
+        int scoreL = 0;
+        int scoreU = 0;
+
+        for(int i=0;i<100;i++){
+            int r = LUT.randInt(lower,upper);
+            if(r==lower)
+                scoreL++;
+            if(r==upper)
+                scoreU++;
+        }
+        Assert.assertTrue((scoreL*scoreU)>0);
+    }
+
+    @Test
+    public void testRandOnceAgain(){
+        int upper = 100;
+        int lower = 0;
+
+        int score = 0;
+        int perc = 34;
+
+        for(int i=0;i<1000;i++){
+            int r = LUT.randInt(lower,upper);
+            if(r<=perc)
+                score++;
+        }
+        double res = (score/1000.0)*100;
+        System.out.println(res);
+        Assert.assertEquals(34,res,5);
+    }
+
+    @Test
+    public void testRandDoub(){
+        double upper = 1.0;
+        double lower = 0.0;
+
+        int score = 100;
+
+        for(int i=0;i<100;i++){
+            double r = LUT.randDoub(lower,upper);
+            if(r>upper || r<lower)
+                score--;
+        }
+        Assert.assertEquals(100,score);
+    }
+
+    @Test
+    public void testRandDoubOnceAgain(){
+        double upper = 1.0;
+        double lower = 0.0;
+
+        int score = 0;
+        double perc = 0.34;
+
+        for(int i=0;i<1000;i++){
+            double r = LUT.randDoub(lower,upper);
+            if(r<=perc)
+                score++;
+        }
+        double res = (score/1000.0);
+        System.out.println(res);
+        Assert.assertEquals(perc,res,0.05);
     }
 
     /**

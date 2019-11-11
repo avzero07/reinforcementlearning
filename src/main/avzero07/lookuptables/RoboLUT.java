@@ -9,6 +9,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -17,11 +18,21 @@ import java.util.concurrent.ThreadLocalRandom;
  * @date 09-November-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.7
+ * @version 0.0.8
  */
 
 /*
 Changelog
+---------------
+Version 0.0.8
+---------------
+- Tweaks to learning operation
+    --  To accommodate learn function
+        --- chosenAction Global variable
+        --- maxAction function (LUT method) to provide index of best action in a state
+- Re-implemented Learning
+    --  Q-Learning Incorporated
+    --  Fixed Terminal Rewards
 ---------------
 Version 0.0.7
 ---------------
@@ -53,7 +64,7 @@ public class RoboLUT extends AdvancedRobot {
     /*
     * Start defining global variables
     * */
-    static double epsilon = 0;    //(1-e) Probability of picking greedily
+    static double epsilon = 0.2;    //(1-e) Probability of picking greedily
     static double gamma = 0.9;      //Discount Factor
     static double alpha = 0.2;      //Step Size
     static double reward = 0;       //Tracks the instantaneous reward. Should be reset after update
@@ -94,13 +105,17 @@ public class RoboLUT extends AdvancedRobot {
     String resPath = "C:/Users/Akshay/Desktop/Robocode Runtime/ScoreResult.txt";
 
     //Instantiate State Objects
-    State s1;           //Current State : State before action
-    State s2;           //Next State    : State after action
+    State s1;                           //Current State : State before action
+    State s2;                           //Next State    : State after action
+    State[] stateArray = new State[2];  //Always tracks current and previous states
+    int chosenAction;   //Global variable to track the chosen action
 
 
     //Flags
     boolean firstSeek = true;
     boolean trueFirstSeek = true;   //Will be true only once
+    boolean ON_POLICY = true;      //Used to Toggle between ON and OFF Policy Learning
+    boolean LEARNING = true;        //Used to Toggle between Learning and no Learning
 
     /*
     * Instantiate LUT
@@ -122,72 +137,41 @@ public class RoboLUT extends AdvancedRobot {
         }
 
         while(true){
-            //Get State
+            //To update S1 for the first time
             if(trueFirstSeek){
                 turnRadarLeft(360);
-                System.out.println("First Seek");
                 trueFirstSeek = false;
             }
             firstSeek = false;
 
-            //Take Action
-            //Greediness comes into play here. Take the greedy action with (1-e) probability
-            double[] possibleActions = lut1.lookUpTable[s1.d2enemInt][s1.myEnerInt][s1.enEnerInt];
+            //SARSA (On Policy TD)
+            if(ON_POLICY==true){
+                break;
+            }
 
-            double chance = Math.random();
-
-            double maxAction = 0;     //Used later for update
-            int maxint = 0;  //Used later for update
-            if(chance<=(1-epsilon)){
-                for(int i=0;i<possibleActions.length;i++){
-                    if(possibleActions[i]>maxAction){
-                        maxAction = possibleActions[i];
-                        maxint = i;
-                    }
+            //Q-Learning (Off Policy TD)
+            if(ON_POLICY==false){
+                double chance = LUT.randDoub(0.0,1.0);
+                int maxActionInt = lut1.maxAction(s1);  //Used later for update
+                if(chance<=(1-epsilon)){
+                    chosenAction = maxActionInt;
                 }
+                else if(chance>(1-epsilon)){
+                    chosenAction = LUT.randInt(0,4); //Need to come back to this later
+                }
+
+                takeAction(chosenAction);
+
+                //Get State Again
+                turnRadarLeft(360);
+
+                int curMaxAction = lut1.maxAction(s2);
+                lut1.qUpdate(s2,s1,alpha,gamma,reward,curMaxAction,chosenAction,false,false);
+
+                reward = 0;
+
+                s1 = s2;
             }
-            else if(chance>(1-epsilon)){
-                maxint = ThreadLocalRandom.current().nextInt(0, 5); //Need to come back to this later
-                maxAction = possibleActions[maxint];
-            }
-
-            switch(maxint){
-                case 0: moveForward();
-                break;
-                case 1: turnLeft();
-                break;
-                case 2: moveBackward();
-                break;
-                case 3: turnRight();
-                break;
-                case 4: shoot();
-                break;
-            }
-
-            //Get State Again
-            turnRadarLeft(360);
-            firstSeek = true;
-
-            //Update Q
-            /*
-            * On Policy Formula
-            *
-            * Q(S,A) <-- Q(S,A) + alpha*(R + gamma*(Q(S',A'))-Q(S,A))
-            *
-            * Q Learning Formula (Off Policy)
-            *
-            * Q(S,A) <-- Q(S,A) + alpha*(R + gamma*max-a(Q(S',A))-Q(S,A))
-            * */
-            double q = lut1.lookUpTable[s1.d2enemInt][s1.myEnerInt][s1.enEnerInt][maxint];
-            q = q + alpha*(reward+(gamma*lut1.lookUpTable[s2.d2enemInt][s2.myEnerInt][s2.enEnerInt][maxint])-q);
-            lut1.lookUpTable[s1.d2enemInt][s1.myEnerInt][s1.enEnerInt][maxint] = q;
-
-            reward = 0;
-
-            //Make S1 <-- S2
-            s1.d2enemInt = s2.d2enemInt;
-            s1.myEnerInt = s2.myEnerInt;
-            s1.enEnerInt = s2.enEnerInt;
         }
     }
 
@@ -235,6 +219,8 @@ public class RoboLUT extends AdvancedRobot {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+        out.println("Aggregate Reward = "+aggReward);
+        aggReward = 0;
     }
 
     @Override
@@ -244,27 +230,59 @@ public class RoboLUT extends AdvancedRobot {
     }
 
     @Override
-    public void onBulletHit(BulletHitEvent event) { reward = reward + 0.5; }
+    public void onBulletHit(BulletHitEvent event) {
+        reward = reward + 0.5;
+        aggReward = aggReward + 0.5;
+    }
 
     @Override
-    public void onHitByBullet(HitByBulletEvent event) { reward = reward -0.5; }
+    public void onHitByBullet(HitByBulletEvent event) {
+        reward = reward -0.5;
+        aggReward = aggReward - 0.5;
+    }
 
     @Override
-    public void onDeath(DeathEvent event) { reward = reward -1; }
+    public void onDeath(DeathEvent event) {
+        reward = reward -1000;
+        lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+        reward = 0;
+        aggReward = aggReward - 1000;
+        out.println("Aggregate Reward = "+aggReward);
+    }
 
     @Override
     public void onWin(WinEvent event) {
-        reward = reward + 1;
+        reward = reward + 1000;
+        lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+        reward = 0;
+        aggReward = aggReward + 1000;
         win = true;
         winCount++;
     }
 
     @Override
-    public void onHitWall(HitWallEvent event) { reward = reward -0.25; }
+    public void onHitWall(HitWallEvent event) {
+        reward = reward - 0.25;
+        aggReward = aggReward - 0.25;
+    }
 
     /*
     * Start Methods for Actions
     * */
+    public void takeAction(int action){
+        switch(action){
+            case 0: moveForward();
+                break;
+            case 1: turnLeft();
+                break;
+            case 2: moveBackward();
+                break;
+            case 3: turnRight();
+                break;
+            case 4: shoot();
+                break;
+        }
+    }
 
     /**
      * Method to scan/seek enemy robot and close in on it
@@ -364,4 +382,10 @@ public class RoboLUT extends AdvancedRobot {
 
         return res;
     }
+
+    public static int randInt(int lower, int upper){
+        Random r = new Random();
+        return (r.nextInt((upper-lower)+1)+lower);
+    }
+
 }

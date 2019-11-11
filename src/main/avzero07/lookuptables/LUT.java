@@ -5,18 +5,24 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Random;
 import java.util.Scanner;
 
 /**
  * LUT Class that implements the LUTInterface.
- * @date 09-November-2019
+ * @date 11-November-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
- * @version 0.0.7
+ * @version 0.0.8
  */
 
 /*
 Changelog
+---------------
+Version 0.0.8
+---------------
+- Implemented randInt() and randDoub()
+    --  Passes tests
 ---------------
 Version 0.0.7
 ---------------
@@ -156,6 +162,67 @@ public class LUT implements LUTInterface {
     }
 
     /**
+     * Method to perform the learning update
+     */
+    public void qUpdate(State current, State previous, double alpha, double gamma, double reward, int s2Action, int s1Action, boolean ON_POLICY, boolean terminal){
+
+        /*
+        * SARSA (On Policy TD)
+        *
+        * Q(S,A) <-- Q(S,A) + alpha*(R + gamma*(Q(S',A'))-Q(S,A))
+        *
+        * */
+        if(ON_POLICY==true){
+            if(terminal==true){
+
+            }
+            if(terminal==false){
+
+            }
+        }
+
+        /*
+        * Q-Learning (Off Policy TD)
+        *
+        * Q(S,A) <-- Q(S,A) + alpha*(R + gamma*max-a(Q(S',A))-Q(S,A))
+        * */
+        if(ON_POLICY==false){
+            double q = this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][s1Action];
+            double qnew = this.lookUpTable[current.d2enemInt][current.myEnerInt][current.enEnerInt][s2Action];
+            double qup;
+            if(terminal==true){
+                qnew = 0;
+                qup = q + (alpha*(reward+(gamma*qnew)-q));
+                this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][s1Action] = qup;
+                return;
+            }
+            if(terminal==false){
+                qup = q + (alpha*(reward+(gamma*qnew)-q));
+                this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][s1Action] = qup;
+                return;
+            }
+        }
+    }
+
+    /**
+     * Method to return the Max Action of a Given State
+     */
+    public int maxAction(State s){
+
+        int maxint=-7;
+        double maxAction = -100;
+        double[] possibleActions = this.lookUpTable[s.d2enemInt][s.myEnerInt][s.enEnerInt];
+
+        for(int i=0;i<possibleActions.length;i++){
+            if(possibleActions[i]>maxAction){
+                maxAction = possibleActions[i];
+                maxint = i;
+            }
+        }
+        return maxint;
+    }
+
+    /**
      * Method to save LUT to file
      * @param pathToDirectory specifies the directory to where files will be written
      * @param identifier to name the files appropriately
@@ -205,5 +272,28 @@ public class LUT implements LUTInterface {
         BufferedWriter writer = new BufferedWriter(new FileWriter(path));
         writer.write(text,0,text.length());
         writer.close();
+    }
+
+    /**
+     * Method to return a random number in specified range (inclusive)
+     * @param lower lower bound
+     * @param upper upper bound
+     * @return return a random int in the range
+     */
+    public static int randInt(int lower, int upper){
+        Random r = new Random();
+        return (r.nextInt((upper-lower)+1)+lower);
+    }
+
+    /**
+     * Method to return a random number in specified range (inclusive)
+     * @param lower lower bound
+     * @param upper upper bound
+     * @return return a random double in the range
+     */
+    public static double randDoub(double lower, double upper){
+        double r = new Random().nextDouble();
+        double res = lower + (r*(upper-lower));
+        return res;
     }
 }

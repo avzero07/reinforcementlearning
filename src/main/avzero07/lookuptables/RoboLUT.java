@@ -94,10 +94,12 @@ public class RoboLUT extends AdvancedRobot {
     * 4. Turn Right
     * 5. Shoot
     * */
-    static int d2eLevels = 5;
-    static int myEnLevels = 16;
-    static int enEnLevels = 16;
+    static int d2eLevels = 4;
+    static int myEnLevels = 4;
+    static int enEnLevels = 4;
     static int numActions = 5;
+    static int posXlevels = 8;
+    static int posYLevels = 8;
 
     //int round = getRoundNum();
 //    Date date = Calendar.getInstance().getTime();
@@ -128,7 +130,7 @@ public class RoboLUT extends AdvancedRobot {
     /*
     * Instantiate LUT
     * */
-    LUT lut1 = new LUT(d2eLevels, myEnLevels, enEnLevels, numActions);
+    LUT lut1 = new LUT(d2eLevels, myEnLevels, enEnLevels, numActions, posXlevels, posYLevels);
 
     /*
     * Run Method for default actions
@@ -242,14 +244,14 @@ public class RoboLUT extends AdvancedRobot {
         int d2e = quantize(e.getDistance(),lut1.d2eLevels,lut1.lowerBound[0],lut1.upperBound[0]);
         int myEn = quantize(getEnergy(),lut1.myEnLevels,lut1.lowerBound[1],lut1.upperBound[1]);
         int enEn = quantize(e.getEnergy(),lut1.enEnLevels,lut1.lowerBound[2],lut1.upperBound[2]);
-
-
+        int exLev = quantize(getX(),lut1.posXLevels,lut1.lowerBound[3],lut1.upperBound[3]);
+        int yiLev = quantize(getY(),lut1.posYLevels,lut1.lowerBound[4],lut1.upperBound[4]);
 
         if(firstSeek){
-            s1 = new State(d2e,myEn,enEn);
+            s1 = new State(d2e,myEn,enEn,exLev,yiLev);
         }
         if(firstSeek!=true){
-            s2 = new State(d2e,myEn,enEn);
+            s2 = new State(d2e,myEn,enEn,exLev,yiLev);
         }
     }
 

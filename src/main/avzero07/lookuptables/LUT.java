@@ -59,29 +59,29 @@ Version 0.0.1
 
 public class LUT implements LUTInterface {
 
-    int d2eLevels, myEnLevels, enEnLevels, numActions, loaded;
+    int d2eLevels, myEnLevels, enEnLevels, numActions, loaded, posXLevels, posYLevels;
     double[] lowerBound, upperBound;
-    double[][][][] lookUpTable,lookUpTableTrav;
+    double[][][][][][] lookUpTable,lookUpTableTrav;
 
     /**
      * Constructor Method for LUT. Choosing to implement as an Array
      * Later improvement will upgrade this to a Hash Table
      */
-    public LUT(int d2elev, int myEnLev, int enEnLev, int numActions){
+    public LUT(int d2elev, int myEnLev, int enEnLev, int numActions, int posXLevels, int posYLevels){
 
         /*
         * Implementing 3 States
         * */
-        //this.posXLevels = posXlev;
-        //this.posYLevels = posYlev;
+        this.posXLevels = posXLevels;
+        this.posYLevels = posYLevels;
         this.d2eLevels = d2elev;
         this.myEnLevels = myEnLev;
         this.enEnLevels = enEnLev;
         this.loaded = 0;
-        this.lowerBound = new double[3];
-        this.upperBound = new double[3];
+        this.lowerBound = new double[5];
+        this.upperBound = new double[5];
 
-        for(int i = 0; i < 3; i++){
+        for(int i = 0; i < 5; i++){
             this.lowerBound[i] = 0;
 
             int up = 0;
@@ -92,6 +92,10 @@ public class LUT implements LUTInterface {
                 case 1: up = 100;
                 break;
                 case 2: up = 100;
+                break;
+                case 3: up = 600;
+                break;
+                case 4: up = 800;
                 break;
             }
             this.upperBound[i] = up;
@@ -105,8 +109,8 @@ public class LUT implements LUTInterface {
         * */
         this.numActions = numActions;
 
-        this.lookUpTable = new double[this.d2eLevels][this.myEnLevels][this.enEnLevels][numActions];
-        this.lookUpTableTrav = new double[this.d2eLevels][this.myEnLevels][this.enEnLevels][numActions];
+        this.lookUpTable = new double[this.d2eLevels][this.myEnLevels][this.enEnLevels][this.posXLevels][this.posYLevels][numActions];
+        this.lookUpTableTrav = new double[this.d2eLevels][this.myEnLevels][this.enEnLevels][this.posXLevels][this.posYLevels][numActions];
         this.initLutTrav(this,0);
         this.initLut(this,1);
     }
@@ -124,10 +128,12 @@ public class LUT implements LUTInterface {
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.myEnLevels; men++)
                 for (int een = 0; een < table.enEnLevels; een++)
-                    for(int act=0;act<this.numActions;act++){
-                        fill = (type == 0) ? 0 : Math.random();
-                        table.lookUpTable[d][men][een][act] = fill;
-                    }
+                    for(int ex = 0; ex < table.posXLevels; ex++)
+                        for(int yi = 0; yi < table.posYLevels; yi++)
+                            for(int act=0;act<this.numActions;act++){
+                                fill = (type == 0) ? 0 : Math.random();
+                                table.lookUpTable[d][men][een][ex][yi][act] = fill;
+                            }
     }
 
     /**
@@ -142,10 +148,12 @@ public class LUT implements LUTInterface {
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.myEnLevels; men++)
                 for (int een = 0; een < table.enEnLevels; een++)
-                    for(int act = 0; act < table.numActions; act++){
-                        fill = (type == 0) ? 0 : Math.random();
-                        table.lookUpTableTrav[d][men][een][act] = fill;
-                    }
+                    for(int ex = 0; ex < table.posXLevels; ex++)
+                        for(int yi = 0; yi < table.posYLevels; yi++)
+                            for(int act=0;act<this.numActions;act++){
+                                fill = (type == 0) ? 0 : Math.random();
+                                table.lookUpTableTrav[d][men][een][ex][yi][act] = fill;
+                            }
     }
 
     @Override
@@ -175,8 +183,8 @@ public class LUT implements LUTInterface {
         *
         * */
 
-        double q = this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][s1Action];
-        double qnew = this.lookUpTable[current.d2enemInt][current.myEnerInt][current.enEnerInt][s2Action];
+        double q = this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][previous.exInt][previous.yiInt][s1Action];
+        double qnew = this.lookUpTable[current.d2enemInt][current.myEnerInt][current.enEnerInt][previous.exInt][previous.yiInt][s2Action];
         double qup;
 
         if(ON_POLICY==true){
@@ -185,7 +193,7 @@ public class LUT implements LUTInterface {
             }
             if(terminal==false){
                 qup = q + (alpha*(reward+(gamma*qnew)-q));
-                this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][s1Action] = qup;
+                this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][previous.exInt][previous.yiInt][s1Action] = qup;
                 return;
             }
         }
@@ -199,12 +207,12 @@ public class LUT implements LUTInterface {
             if(terminal==true){
                 qnew = 0;
                 qup = q + (alpha*(reward+(gamma*qnew)-q));
-                this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][s1Action] = qup;
+                this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][previous.exInt][previous.yiInt][s1Action] = qup;
                 return;
             }
             if(terminal==false){
                 qup = q + (alpha*(reward+(gamma*qnew)-q));
-                this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][s1Action] = qup;
+                this.lookUpTable[previous.d2enemInt][previous.myEnerInt][previous.enEnerInt][previous.exInt][previous.yiInt][s1Action] = qup;
                 return;
             }
         }
@@ -218,7 +226,7 @@ public class LUT implements LUTInterface {
         int maxint=-7;
         double maxAction = -100;
         try{
-            double[] possibleActions = this.lookUpTable[s.d2enemInt][s.myEnerInt][s.enEnerInt];
+            double[] possibleActions = this.lookUpTable[s.d2enemInt][s.myEnerInt][s.enEnerInt][s.exInt][s.yiInt];
             for(int i=0;i<possibleActions.length;i++){
                 if(possibleActions[i]>maxAction){
                     maxAction = possibleActions[i];
@@ -245,13 +253,15 @@ public class LUT implements LUTInterface {
         String op = "";
 
         for (int d = 0; d < this.d2eLevels; d++)
-            for (int men = 0; men < this.enEnLevels; men++) {
+            for (int men = 0; men < this.myEnLevels; men++)
                 for (int een = 0; een < this.enEnLevels; een++)
-                    for(int act = 0; act < this.numActions; act++){
-                        op = op + this.lookUpTable[d][men][een][act] + " ";
-                    }
-                op = op + "\n";
-            }
+                    for(int ex = 0; ex < this.posXLevels; ex++)
+                        for(int yi = 0; yi < this.posYLevels; yi++){
+                            for(int act=0;act<this.numActions;act++){
+                                op = op + this.lookUpTable[d][men][een][ex][yi][act] + " ";
+                            }
+                            op = op + "\n";
+                        }
 
         File f = new File(pathToDirectory);
         f.mkdirs();
@@ -266,11 +276,14 @@ public class LUT implements LUTInterface {
         Scanner scan = new Scanner(f);
 
         for (int d = 0; d < this.d2eLevels; d++)
-            for (int men = 0; men < this.enEnLevels; men++)
+            for (int men = 0; men < this.myEnLevels; men++)
                 for (int een = 0; een < this.enEnLevels; een++)
-                    for(int act = 0; act < this.numActions; act++){
-                        this.lookUpTable[d][men][een][act] = scan.nextDouble();
-                    }
+                    for(int ex = 0; ex < this.posXLevels; ex++)
+                        for(int yi = 0; yi < this.posYLevels; yi++)
+                            for(int act=0;act<this.numActions;act++){
+                                this.lookUpTable[d][men][een][ex][yi][act] = scan.nextDouble();
+                            }
+
         scan.close();
         this.loaded=1;
     }

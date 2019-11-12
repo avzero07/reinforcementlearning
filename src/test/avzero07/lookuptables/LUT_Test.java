@@ -40,27 +40,29 @@ Version 0.0.1
 
 public class LUT_Test {
 
-    int posXlev = 10;
-    int posYlev = 10;
-    int d2elev = 5;
-    int myEnLev = 20;
-    int enEnLev = 20;
-    int numAct = 6;
+    int posXlev = 8;
+    int posYlev = 8;
+    int d2elev = 4;
+    int myEnLev = 4;
+    int enEnLev = 4;
+    int numAct = 5;
 
     /**
      * Tests whether the look up table is filled with non-zeros properly
      */
     @Test
     public void fillTestRand(){
-        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct);
+        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct, posXlev, posYlev);
         double sum = 0;
         table.initLut(table,1);
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.enEnLevels; men++)
                 for (int een = 0; een < table.enEnLevels; een++)
-                    for(int act = 0; act < table.numActions; act++){
-                        sum = sum + table.lookUpTable[d][men][een][act];
-                    }
+                    for(int ex = 0; ex < table.posXLevels; ex++)
+                        for(int yi = 0; yi < table.posYLevels; yi++)
+                            for(int act = 0; act < table.numActions; act++){
+                                sum = sum + table.lookUpTable[d][men][een][ex][yi][act];
+                            }
         Assert.assertNotEquals(0,sum,0);
     }
 
@@ -69,15 +71,17 @@ public class LUT_Test {
      */
     @Test
     public void fillTestZero(){
-        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct);
+        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct, posXlev, posYlev);
         double sum = 0;
         table.initLut(table,0);
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.enEnLevels; men++)
                 for (int een = 0; een < table.enEnLevels; een++)
-                    for(int act = 0; act < table.numActions; act++){
-                        sum = sum + table.lookUpTable[d][men][een][act];
-                    }
+                    for(int ex = 0; ex < table.posXLevels; ex++)
+                        for(int yi = 0; yi < table.posYLevels; yi++)
+                            for(int act = 0; act < table.numActions; act++){
+                                sum = sum + table.lookUpTable[d][men][een][ex][yi][act];
+                            }
         Assert.assertEquals(0,sum,0);
     }
 
@@ -86,14 +90,16 @@ public class LUT_Test {
      */
     @Test
     public void fillTravZero(){
-        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct);
+        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct, posXlev, posYlev);
         double sum = 0;
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.enEnLevels; men++)
                 for (int een = 0; een < table.enEnLevels; een++)
-                    for(int act = 0; act < table.numActions; act++){
-                        sum = sum + table.lookUpTableTrav[d][men][een][act];
-                    }
+                    for(int ex = 0; ex < table.posXLevels; ex++)
+                        for(int yi = 0; yi < table.posYLevels; yi++)
+                            for(int act = 0; act < table.numActions; act++){
+                                sum = sum + table.lookUpTableTrav[d][men][een][ex][yi][act];
+                            }
         Assert.assertEquals(0,sum,0);
     }
 
@@ -102,7 +108,7 @@ public class LUT_Test {
      */
     @Test
     public void testSave() throws IOException {
-        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct);
+        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct, posXlev, posYlev);
         table.initLut(table,1);
         String path = "C:/Users/Akshay/AppData/Local/Temp/LUT_Test";
         table.saveWeights(path,"test-file");
@@ -110,14 +116,17 @@ public class LUT_Test {
         File f = new File(path+"/test-file.txt");
         Scanner scan = new Scanner(f);
 
-        double[][][][] loaded = new double[d2elev][myEnLev][enEnLev][numAct];
+        double[][][][][][] loaded = new double[d2elev][myEnLev][enEnLev][posXlev][posYlev][numAct];
 
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.enEnLevels; men++)
                 for (int een = 0; een < table.enEnLevels; een++)
-                    for(int act = 0; act < table.numActions; act++){
-                        loaded[d][men][een][act] = scan.nextDouble();
-                    }
+                    for(int ex = 0; ex < table.posXLevels; ex++)
+                        for(int yi = 0; yi < table.posYLevels; yi++)
+                            for(int act = 0; act < table.numActions; act++){
+                                loaded[d][men][een][ex][yi][act] = scan.nextDouble();
+                            }
+
         scan.close();
         f.delete();
 
@@ -130,7 +139,7 @@ public class LUT_Test {
 
     @Test
     public void testLoad() throws IOException {
-        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct);
+        LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct, posXlev, posYlev);
         table.initLut(table,1);
         String path = "C:/Users/Akshay/AppData/Local/Temp/LUT_Test";
         table.saveWeights(path,"test-file");
@@ -140,12 +149,15 @@ public class LUT_Test {
         table.load("C:/Users/Akshay/AppData/Local/Temp/LUT_Test/test-file.txt");
 
         double sum = 0;
+
         for (int d = 0; d < table.d2eLevels; d++)
             for (int men = 0; men < table.enEnLevels; men++)
                 for (int een = 0; een < table.enEnLevels; een++)
-                    for(int act = 0; act < table.numActions; act++){
-                        sum = sum + table.lookUpTable[d][men][een][act];
-                    }
+                    for(int ex = 0; ex < table.posXLevels; ex++)
+                        for(int yi = 0; yi < table.posYLevels; yi++)
+                            for(int act = 0; act < table.numActions; act++){
+                                sum = sum + table.lookUpTable[d][men][een][ex][yi][act];
+                            }
         Assert.assertNotEquals(0,sum,0);
     }
 

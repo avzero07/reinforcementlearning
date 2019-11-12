@@ -40,12 +40,12 @@ Version 0.0.1
 
 public class LUT_Test {
 
+    int d2elev = 8;
+    int myEnLev = 1;
+    int enEnLev = 8;
+    int numAct = 5;
     int posXlev = 8;
     int posYlev = 8;
-    int d2elev = 4;
-    int myEnLev = 4;
-    int enEnLev = 4;
-    int numAct = 5;
 
     /**
      * Tests whether the look up table is filled with non-zeros properly
@@ -56,7 +56,7 @@ public class LUT_Test {
         double sum = 0;
         table.initLut(table,1);
         for (int d = 0; d < table.d2eLevels; d++)
-            for (int men = 0; men < table.enEnLevels; men++)
+            for (int men = 0; men < table.myEnLevels; men++)
                 for (int een = 0; een < table.enEnLevels; een++)
                     for(int ex = 0; ex < table.posXLevels; ex++)
                         for(int yi = 0; yi < table.posYLevels; yi++)
@@ -75,7 +75,7 @@ public class LUT_Test {
         double sum = 0;
         table.initLut(table,0);
         for (int d = 0; d < table.d2eLevels; d++)
-            for (int men = 0; men < table.enEnLevels; men++)
+            for (int men = 0; men < table.myEnLevels; men++)
                 for (int een = 0; een < table.enEnLevels; een++)
                     for(int ex = 0; ex < table.posXLevels; ex++)
                         for(int yi = 0; yi < table.posYLevels; yi++)
@@ -93,7 +93,7 @@ public class LUT_Test {
         LUT table = new LUT(d2elev, myEnLev, enEnLev, numAct, posXlev, posYlev);
         double sum = 0;
         for (int d = 0; d < table.d2eLevels; d++)
-            for (int men = 0; men < table.enEnLevels; men++)
+            for (int men = 0; men < table.myEnLevels; men++)
                 for (int een = 0; een < table.enEnLevels; een++)
                     for(int ex = 0; ex < table.posXLevels; ex++)
                         for(int yi = 0; yi < table.posYLevels; yi++)
@@ -119,7 +119,7 @@ public class LUT_Test {
         double[][][][][][] loaded = new double[d2elev][myEnLev][enEnLev][posXlev][posYlev][numAct];
 
         for (int d = 0; d < table.d2eLevels; d++)
-            for (int men = 0; men < table.enEnLevels; men++)
+            for (int men = 0; men < table.myEnLevels; men++)
                 for (int een = 0; een < table.enEnLevels; een++)
                     for(int ex = 0; ex < table.posXLevels; ex++)
                         for(int yi = 0; yi < table.posYLevels; yi++)
@@ -151,7 +151,7 @@ public class LUT_Test {
         double sum = 0;
 
         for (int d = 0; d < table.d2eLevels; d++)
-            for (int men = 0; men < table.enEnLevels; men++)
+            for (int men = 0; men < table.myEnLevels; men++)
                 for (int een = 0; een < table.enEnLevels; een++)
                     for(int ex = 0; ex < table.posXLevels; ex++)
                         for(int yi = 0; yi < table.posYLevels; yi++)
@@ -164,10 +164,10 @@ public class LUT_Test {
     @Test
     public void testQuant(){
         //Remember that Energy can go above 100
-        double val = 120;
-        int numLev = 20;
+        double val = 145.5;
+        int numLev = 8;
         double lowerBound = 0;
-        double upperBound = 100;
+        double upperBound = 360;
 
         int res = quantize(val,numLev,lowerBound,upperBound);
         System.out.println(res);

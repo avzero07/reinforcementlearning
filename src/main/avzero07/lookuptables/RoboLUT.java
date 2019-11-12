@@ -77,6 +77,8 @@ public class RoboLUT extends AdvancedRobot {
 
     //Track Win Rate Per 20 battles
     static double[] wins = new double[1000];
+    static double[] finalEnergy = new double[1000]; //Tracking Damage Taken in a round
+
 
     static int roundCount = 0;
 
@@ -95,11 +97,16 @@ public class RoboLUT extends AdvancedRobot {
     * 5. Shoot
     * */
     static int d2eLevels = 4;
-    static int myEnLevels = 4;
-    static int enEnLevels = 4;
+    static int myEnLevels = 1;
+    static int enEnLevels = 4; //Changed to heading
     static int numActions = 5;
-    static int posXlevels = 8;
-    static int posYLevels = 8;
+    static int posXlevels = 4;
+    static int posYLevels = 4;
+
+    //Robocode Complete Conditions
+    private final TurnCompleteCondition turnComplete = new TurnCompleteCondition(this);
+    private final MoveCompleteCondition moveComplete = new MoveCompleteCondition(this);
+    private final GunTurnCompleteCondition gunMoveComplete = new GunTurnCompleteCondition(this);
 
     //int round = getRoundNum();
 //    Date date = Calendar.getInstance().getTime();
@@ -236,14 +243,14 @@ public class RoboLUT extends AdvancedRobot {
         //setTurnGunLeft(getHeading() - getGunHeading() + normalizeBearing(e.getBearing()));
 
         double absoluteBearing = getHeadingRadians() + e.getBearingRadians();
-        setTurnGunRightRadians(Utils.normalRelativeAngle(absoluteBearing -
+        turnGunRightRadians(Utils.normalRelativeAngle(absoluteBearing -
                 getGunHeadingRadians() + (e.getVelocity() * Math.sin(e.getHeadingRadians() -
                 absoluteBearing) / 13.0)));
-        setFire(1.0);
 
         int d2e = quantize(e.getDistance(),lut1.d2eLevels,lut1.lowerBound[0],lut1.upperBound[0]);
         int myEn = quantize(getEnergy(),lut1.myEnLevels,lut1.lowerBound[1],lut1.upperBound[1]);
-        int enEn = quantize(e.getEnergy(),lut1.enEnLevels,lut1.lowerBound[2],lut1.upperBound[2]);
+        //Change enEn to Enemy Heading
+        int enEn = quantize(e.getHeading(),lut1.enEnLevels, lut1.lowerBound[2],lut1.upperBound[2]);
         int exLev = quantize(getX(),lut1.posXLevels,lut1.lowerBound[3],lut1.upperBound[3]);
         int yiLev = quantize(getY(),lut1.posYLevels,lut1.lowerBound[4],lut1.upperBound[4]);
 
@@ -275,24 +282,36 @@ public class RoboLUT extends AdvancedRobot {
         }
         //out.println("Aggregate Reward = "+aggReward);
         aggReward = 0;
+
+        double energy = getEnergy();
+        int roundCount = getRoundNum();
+        finalEnergy[(roundCount/100)] = finalEnergy[(roundCount/100)] + energy;
     }
 
     @Override
     public void onBattleEnded(BattleEndedEvent event) {
-        File f = new File(temp+"/tmp.txt");
-        //f.delete();
+        String res = "Wins\tRemaining Energy\n";
+        for(int i=0;i<wins.length;i++){
+            res = res + wins[i] + "\t" + finalEnergy[i] +"\n";
+        }
+
+        try {
+            LUT.writeToFile(resPath,res);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onBulletHit(BulletHitEvent event) {
-        reward = reward + 0.5;
-        aggReward = aggReward + 0.5;
+        reward = reward + 1;
+        aggReward = aggReward + 1;
     }
 
     @Override
     public void onHitByBullet(HitByBulletEvent event) {
-        reward = reward - 0.5;
-        aggReward = aggReward - 0.5;
+        reward = reward - 1;
+        aggReward = aggReward - 1;
     }
 
     @Override
@@ -317,27 +336,16 @@ public class RoboLUT extends AdvancedRobot {
         winCount++;
 
         int roundCount = getRoundNum();
-        wins[(roundCount/20)]++;
-        if((roundCount+1)%20==0){
-            wins[(roundCount/20)] = wins[(roundCount/20)]/20;
-        }
-
-        String res = "";
-        for(int i=0;i<wins.length;i++){
-            res = res + " " + wins[i] + "\n";
-        }
-
-        try {
-            LUT.writeToFile(resPath,res);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        wins[(roundCount/100)]++;
+        //if((roundCount+1)%20==0){
+        //    wins[(roundCount/20)] = wins[(roundCount/20)]/20;
+        //}
     }
 
     @Override
     public void onHitWall(HitWallEvent event) {
-        reward = reward - 0.25;
-        aggReward = aggReward - 0.25;
+        reward = reward - 1;
+        aggReward = aggReward - 1;
     }
 
     /*
@@ -369,6 +377,7 @@ public class RoboLUT extends AdvancedRobot {
      * Simple Movement: Turn Left
      */
     public void turnLeft(){
+
         turnLeft(90);
     }
 
@@ -392,38 +401,6 @@ public class RoboLUT extends AdvancedRobot {
     }
 
     /**
-     * Method to move around
-     */
-    public void moveComplex(){
-        double x = getX();
-        double y = getY();
-
-        double height = getBattleFieldHeight();
-        double width = getBattleFieldWidth();
-
-        double heading = getHeading();
-        //Q 1
-        if((x>=width/2)&&(y>=height/2)){
-
-        }
-
-        //Q 2
-        if((x<width/2)&&(y>=height/2)){
-
-        }
-
-        //Q 3
-        if((x<width/2)&&(y<height/2)){
-
-        }
-
-        //Q 4
-        if((x>=height/2)&&(y<height/2)){
-
-        }
-    }
-
-    /**
      * Method to return the normalized bearing
      */
     // normalizes a bearing to between +180 and -180
@@ -437,8 +414,9 @@ public class RoboLUT extends AdvancedRobot {
      * Method to fire
      */
     public void shoot(){
-        // if the gun is cool and we're pointed at the target, shoot!
-        execute();
+        // If the gun is cool and we're pointed at the target, shoot!
+        waitFor(gunMoveComplete);
+        fire(1);
     }
 
     /*

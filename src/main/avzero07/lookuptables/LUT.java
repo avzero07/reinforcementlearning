@@ -91,11 +91,11 @@ public class LUT implements LUTInterface {
                 break;
                 case 1: up = 100;
                 break;
-                case 2: up = 100;
+                case 2: up = 360;
                 break;
-                case 3: up = 600;
+                case 3: up = 800;
                 break;
-                case 4: up = 800;
+                case 4: up = 600;
                 break;
             }
             this.upperBound[i] = up;
@@ -281,7 +281,13 @@ public class LUT implements LUTInterface {
                     for(int ex = 0; ex < this.posXLevels; ex++)
                         for(int yi = 0; yi < this.posYLevels; yi++)
                             for(int act=0;act<this.numActions;act++){
-                                this.lookUpTable[d][men][een][ex][yi][act] = scan.nextDouble();
+                                try{
+                                    this.lookUpTable[d][men][een][ex][yi][act] = scan.nextDouble();
+                                }
+                                catch(Exception e)
+                                {
+                                    e.printStackTrace();
+                                }
                             }
 
         scan.close();

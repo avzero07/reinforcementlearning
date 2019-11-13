@@ -224,10 +224,14 @@ public class LUT implements LUTInterface {
     public int maxAction(State s){
 
         int maxint=-7;
-        double maxAction = -100;
+        double maxAction=-100;
         try{
             double[] possibleActions = this.lookUpTable[s.d2enemInt][s.myEnerInt][s.enEnerInt][s.exInt][s.yiInt];
             for(int i=0;i<possibleActions.length;i++){
+                if(i==0){
+                    maxAction = possibleActions[i];
+                    maxint = i;
+                }
                 if(possibleActions[i]>maxAction){
                     maxAction = possibleActions[i];
                     maxint = i;

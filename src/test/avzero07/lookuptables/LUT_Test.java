@@ -164,8 +164,8 @@ public class LUT_Test {
     @Test
     public void testQuant(){
         //Remember that Energy can go above 100
-        double val = 145.5;
-        int numLev = 8;
+        double val = 45.25;
+        int numLev = 1;
         double lowerBound = 0;
         double upperBound = 360;
 

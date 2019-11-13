@@ -4,14 +4,7 @@ import robocode.*;
 import robocode.util.Utils;
 
 import java.io.*;
-import java.nio.Buffer;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Random;
-import java.util.Scanner;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * RobotLUT Implementation Class.
@@ -78,7 +71,7 @@ public class RoboLUT extends AdvancedRobot {
     //Track Win Rate Per 20 battles
     static double[] wins = new double[1000];
     static double[] finalEnergy = new double[1000]; //Tracking Damage Taken in a round
-
+    static double[] aggRew = new double[1000];      //Agg reward in a round
 
     static int roundCount = 0;
 
@@ -91,14 +84,14 @@ public class RoboLUT extends AdvancedRobot {
     * Actions
     * 0. Seek
     * 1. Move Ahead
-    * 2. Turn Left
+    * 2. Turn Left (back and front)
     * 3. Move Back
-    * 4. Turn Right
+    * 4. Turn Right (back and front)
     * 5. Shoot
     * */
     static int d2eLevels = 4;
     static int myEnLevels = 1;
-    static int enEnLevels = 4; //Changed to heading
+    static int enEnLevels = 8; //Changed to heading
     static int numActions = 5;
     static int posXlevels = 4;
     static int posYLevels = 4;
@@ -122,6 +115,7 @@ public class RoboLUT extends AdvancedRobot {
     //Instantiate State Objects
     State s1;                           //Current State : State before action
     State s2;                           //Next State    : State after action
+    State s3;                           //Used for terminal Q learning death null pointer scenario
     State[] stateArray = new State[2];  //Always tracks current and previous states
     int chosenAction;   //Global variable to track the chosen action
     int prevAction;     //For Sarsa
@@ -133,11 +127,13 @@ public class RoboLUT extends AdvancedRobot {
     boolean trueFirstSeek = true;   //Will be true only once
     static boolean ON_POLICY = false;      //Used to Toggle between ON and OFF Policy Learning
     static boolean LEARNING = true;        //Used to Toggle between Learning and no Learning
+    static boolean intermediateRewards = true; //Used to toggle intermediate rewards
+    static boolean terminalRewards = true;      //Used to toggle terminal rewards
 
     /*
     * Instantiate LUT
     * */
-    LUT lut1 = new LUT(d2eLevels, myEnLevels, enEnLevels, numActions, posXlevels, posYLevels);
+    static LUT lut1 = new LUT(d2eLevels, myEnLevels, enEnLevels, numActions, posXlevels, posYLevels);
 
     /*
     * Run Method for default actions
@@ -145,18 +141,20 @@ public class RoboLUT extends AdvancedRobot {
     * */
     @Override
     public void run(){
-        if(lut1.loaded==0 && getRoundNum()!=0) {
-            try {
-                lut1.load(loadTemp);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+//        if(lut1.loaded==0 && getRoundNum()!=0) {
+//            try {
+//                lut1.load(loadTemp);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
         while(true){
             //To update S1 for the first time
             if(trueFirstSeek){
                 turnRadarLeft(360);
+                if(s1==null)
+                    turnRadarLeft(360);
                 trueFirstSeek = false;
             }
             firstSeek = false;
@@ -184,6 +182,9 @@ public class RoboLUT extends AdvancedRobot {
                 //Get State Again
                 turnRadarLeft(360);
 
+                if(s2==null)
+                    turnRadarLeft(360);
+
                 //Choose Action for new state
                 double chance = LUT.randDoub(0.0,1.0);
                 int maxActionInt = lut1.maxAction(s2);  //Used later for update
@@ -196,7 +197,12 @@ public class RoboLUT extends AdvancedRobot {
 
                 //Update Table
                 if(LEARNING){
-                    lut1.qUpdate(s2,s1,alpha,gamma,reward,chosenAction,prevAction,true,false);
+                    try{
+                        lut1.qUpdate(s2,s1,alpha,gamma,reward,chosenAction,prevAction,true,false);
+                    }
+                    catch(Exception e){
+                        e.printStackTrace();
+                    }
                 }
 
                 prevAction = chosenAction;
@@ -221,11 +227,16 @@ public class RoboLUT extends AdvancedRobot {
                 turnRadarLeft(360);
 
                 if(s2==null)
-                    turnRadarLeft(360);;
+                    turnRadarLeft(360);
 
                 int curMaxAction = lut1.maxAction(s2);
                 if(LEARNING){
-                    lut1.qUpdate(s2,s1,alpha,gamma,reward,curMaxAction,chosenAction,false,false);
+                    try{
+                        lut1.qUpdate(s2,s1,alpha,gamma,reward,curMaxAction,chosenAction,false,false);
+                    }
+                    catch(Exception e){
+                        e.printStackTrace();
+                    }
                 }
 
                 reward = 0;
@@ -265,22 +276,17 @@ public class RoboLUT extends AdvancedRobot {
     @Override
     public void onRoundEnded(RoundEndedEvent e) {
         roundCount++;
-        /*String pathToRoundWeights = pathToBattle+"/Rounds/";
-        File f = new File(pathToRoundWeights);
-        f.mkdirs();
+//        String pathToRoundWeights = pathToBattle+"/Rounds/";
+//        File f = new File(pathToRoundWeights);
+//        f.mkdirs();
+//
+//        try {
+//            lut1.saveWeights(pathToRoundWeights,"Round-"+getRoundNum());
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
 
-        try {
-            lut1.saveWeights(pathToRoundWeights,"Round-"+getRoundNum());
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }*/
-
-        try {
-            lut1.saveWeights(temp,"tmp");
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        //out.println("Aggregate Reward = "+aggReward);
+        out.println("Aggregate Reward = "+aggReward);
         aggReward = 0;
 
         double energy = getEnergy();
@@ -290,9 +296,10 @@ public class RoboLUT extends AdvancedRobot {
 
     @Override
     public void onBattleEnded(BattleEndedEvent event) {
-        String res = "Wins\tRemaining Energy\n";
+        String res = "Wins\tRemaining Energy\tAggReward\n";
         for(int i=0;i<wins.length;i++){
-            res = res + wins[i] + "\t" + finalEnergy[i] +"\n";
+            res = res + wins[i] + "\t" + finalEnergy[i] + "" +
+                    "\t" + aggRew[i] +"\n";
         }
 
         try {
@@ -300,38 +307,68 @@ public class RoboLUT extends AdvancedRobot {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        try {
+            lut1.saveWeights(temp,"tmp");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     @Override
     public void onBulletHit(BulletHitEvent event) {
-        reward = reward + 1;
-        aggReward = aggReward + 1;
+        if(intermediateRewards){
+            reward = reward + 1;
+        }
+        aggRew[roundCount/100]++;
     }
 
     @Override
     public void onHitByBullet(HitByBulletEvent event) {
-        reward = reward - 1;
-        aggReward = aggReward - 1;
+        if(intermediateRewards){
+            reward = reward - 1;
+        }
+        aggRew[roundCount/100]--;
     }
 
     @Override
     public void onDeath(DeathEvent event) {
-        reward = reward -1000;
+        if(terminalRewards){
+            reward = reward -1000;
+        }
         if(LEARNING){
-            lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+            try{
+                if(s2==null){
+                    s3 = s1;
+                    lut1.qUpdate(s3,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+                }
+                if(s2!=null){
+                    lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+                }
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
         }
         reward = 0;
-        aggReward = aggReward - 1000;
+        aggRew[roundCount/100] = aggRew[roundCount/100] - 1000;
     }
 
     @Override
     public void onWin(WinEvent event) {
-        reward = reward + 1000;
+        if(terminalRewards){
+            reward = reward + 1000;
+        }
         if(LEARNING){
-            lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+            try{
+                lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
         }
         reward = 0;
-        aggReward = aggReward + 1000;
+        aggRew[roundCount/100] = aggRew[roundCount/100] + 1000;
         win = true;
         winCount++;
 
@@ -344,8 +381,10 @@ public class RoboLUT extends AdvancedRobot {
 
     @Override
     public void onHitWall(HitWallEvent event) {
-        reward = reward - 1;
-        aggReward = aggReward - 1;
+        if(intermediateRewards){
+            reward = reward - 1;
+        }
+        aggRew[roundCount/100]--;
     }
 
     /*
@@ -353,16 +392,19 @@ public class RoboLUT extends AdvancedRobot {
     * */
     public void takeAction(int action){
         switch(action){
-            case 0: moveForward();
+            case 0: turnRightForward();
                 break;
-            case 1: turnLeft();
+            case 1: turnLeftForward();
                 break;
-            case 2: moveBackward();
+            case 2: turnLeftBack();
                 break;
-            case 3: turnRight();
+            case 3: turnRightBack();
                 break;
             case 4: shoot();
                 break;
+            case 5: moveForward();
+                break;
+            case 6: moveBackward();
         }
     }
 
@@ -376,15 +418,32 @@ public class RoboLUT extends AdvancedRobot {
     /**
      * Simple Movement: Turn Left
      */
-    public void turnLeft(){
+    public void turnLeftForward(){
+        setTurnLeft(90);
+        setAhead(77);
+        execute();
+    }
+    public void turnLeftBack(){
 
-        turnLeft(90);
+        setTurnLeft(90);
+        setBack(77);
+        execute();
     }
 
     /**
      * Simple Movement: Turn Right
      */
-    public void turnRight(){ turnRight(90); }
+    public void turnRightForward(){
+        setTurnRight(90);
+        setAhead(77);
+        execute();
+    }
+
+    public void turnRightBack(){
+        setTurnRight(90);
+        setBack(77);
+        execute();
+    }
 
     /**
      * Simple Movement: Move Forward
@@ -414,7 +473,7 @@ public class RoboLUT extends AdvancedRobot {
      * Method to fire
      */
     public void shoot(){
-        // If the gun is cool and we're pointed at the target, shoot!
+        //Choice of whether to fire
         waitFor(gunMoveComplete);
         fire(1);
     }

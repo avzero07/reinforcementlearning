@@ -58,9 +58,9 @@ public class RoboLUT extends AdvancedRobot {
     /*
     * Start defining global variables
     * */
-    static double epsilon = 0.2;    //(1-e) Probability of picking greedily
+    static double epsilon = 1;    //(1-e) Probability of picking greedily
     static double gamma = 0.9;      //Discount Factor
-    static double alpha = 0.2;      //Step Size
+    static double alpha = 0.1;      //Step Size
     double reward = 0;       //Tracks the instantaneous reward. Should be reset after update
     double aggReward = 0;    //Tracks the aggregate reward. Resets every episode [round]
 
@@ -89,16 +89,14 @@ public class RoboLUT extends AdvancedRobot {
     * 4. Turn Right (back and front)
     * 5. Shoot
     * */
-    static int d2eLevels = 4;
-    static int myEnLevels = 1;
-    static int enEnLevels = 8; //Changed to heading
-    static int numActions = 5;
+    static int d2eLevels = 6;
+    static int myEnLevels = 4;
+    static int enEnLevels = 4; //Changed to heading
+    static int numActions = 8;
     static int posXlevels = 4;
     static int posYLevels = 4;
 
     //Robocode Complete Conditions
-    private final TurnCompleteCondition turnComplete = new TurnCompleteCondition(this);
-    private final MoveCompleteCondition moveComplete = new MoveCompleteCondition(this);
     private final GunTurnCompleteCondition gunMoveComplete = new GunTurnCompleteCondition(this);
 
     //int round = getRoundNum();
@@ -261,7 +259,7 @@ public class RoboLUT extends AdvancedRobot {
         int d2e = quantize(e.getDistance(),lut1.d2eLevels,lut1.lowerBound[0],lut1.upperBound[0]);
         int myEn = quantize(getEnergy(),lut1.myEnLevels,lut1.lowerBound[1],lut1.upperBound[1]);
         //Change enEn to Enemy Heading
-        int enEn = quantize(e.getHeading(),lut1.enEnLevels, lut1.lowerBound[2],lut1.upperBound[2]);
+        int enEn = quantize(e.getBearing()+180,lut1.enEnLevels, lut1.lowerBound[2],lut1.upperBound[2]);
         int exLev = quantize(getX(),lut1.posXLevels,lut1.lowerBound[3],lut1.upperBound[3]);
         int yiLev = quantize(getY(),lut1.posYLevels,lut1.lowerBound[4],lut1.upperBound[4]);
 
@@ -292,6 +290,17 @@ public class RoboLUT extends AdvancedRobot {
         double energy = getEnergy();
         int roundCount = getRoundNum();
         finalEnergy[(roundCount/100)] = finalEnergy[(roundCount/100)] + energy;
+
+        //Epsilon Decay
+        if(roundCount%100==0 && roundCount!=0  && epsilon>0){
+
+            if(epsilon>0 && epsilon<0.1) epsilon = 0;
+            else epsilon = epsilon - 0.1;
+        }
+
+        //Overfitting Beyond This
+//        if(roundCount>1500 && LEARNING==true)
+//            LEARNING = false;
     }
 
     @Override
@@ -393,18 +402,21 @@ public class RoboLUT extends AdvancedRobot {
     public void takeAction(int action){
         switch(action){
             case 0: turnRightForward();
-                break;
+            break;
             case 1: turnLeftForward();
-                break;
+            break;
             case 2: turnLeftBack();
-                break;
+            break;
             case 3: turnRightBack();
-                break;
+            break;
             case 4: shoot();
-                break;
-            case 5: moveForward();
-                break;
+            break;
+            case 5: shootPow();
+            break;
             case 6: moveBackward();
+            break;
+            case 7: moveForward();
+            break;
         }
     }
 
@@ -474,8 +486,12 @@ public class RoboLUT extends AdvancedRobot {
      */
     public void shoot(){
         //Choice of whether to fire
-        waitFor(gunMoveComplete);
+        //waitFor(gunMoveComplete);
         fire(1);
+    }
+
+    public void shootPow(){
+        fire(2);
     }
 
     /*

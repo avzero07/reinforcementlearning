@@ -79,19 +79,21 @@ public class RoboLUT extends AdvancedRobot {
     * States
     * 0. Distance to Enemy
     * 1. My Energy
-    * 2. Enemy Energy
+    * 2. Enemy Bearing
+    * 3. My X Co-ordinate
+    * 4. My Y Co-ordinate
     *
     * Actions
-    * 0. Seek
     * 1. Move Ahead
     * 2. Turn Left (back and front)
     * 3. Move Back
     * 4. Turn Right (back and front)
     * 5. Shoot
+    * 6. Shoot (Power 2)
     * */
     static int d2eLevels = 6;
     static int myEnLevels = 4;
-    static int enEnLevels = 4; //Changed to heading
+    static int enEnLevels = 4; //Changed to enemy bearing
     static int numActions = 8;
     static int posXlevels = 4;
     static int posYLevels = 4;
@@ -329,7 +331,7 @@ public class RoboLUT extends AdvancedRobot {
         if(intermediateRewards){
             reward = reward + 1;
         }
-        aggRew[roundCount/100]++;
+        aggRew[roundCount/1]++;
     }
 
     @Override

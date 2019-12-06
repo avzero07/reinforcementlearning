@@ -29,6 +29,8 @@ Changelog
 ---------------
 Version 0.8
 ---------------
+Date 05-Dec-2019
+- Discovered interesting logical error related to E not resetting at the end of the epoch
 Date 20-Oct-2019
 - Now indicates the type of Activation Function in use
 - Added functionality to save weight matrices from each trial
@@ -60,7 +62,7 @@ public class BPLearning3 {
         double[][] y = {{-0.8},{0.8},{0.8},{-0.8}};
 
         int numInputNeurons = 2;
-        int numHiddenNeurons = 4;
+        int numHiddenNeurons = 8;
         int numOutputNeurons = 1;
 
         double learningRate = 0.2;
@@ -136,7 +138,6 @@ public class BPLearning3 {
                 }
                 E = 0.5*E;
                 s = s + "\n"+k+", "+E;
-
                 if(E<0.05){
                     kCount = kCount+"\n"+k;
                     System.out.println("Trial Number: "+loop+" Converged at Epoch "+k);
@@ -144,6 +145,7 @@ public class BPLearning3 {
                     nn1.saveWeights(pathStringWeights,identifier);
                     break;
                 }
+                E = 0;
             }
             writeToFile(pathString+loop+"."+k+".txt",s);
             writeToFile(pathString+"Epoch List (Converged) Q1C.txt",kCount+"\n");

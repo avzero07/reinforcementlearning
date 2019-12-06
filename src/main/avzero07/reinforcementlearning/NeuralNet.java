@@ -116,21 +116,21 @@ public class NeuralNet implements NeuralNetInterface{
     /*
      * Define Fields for the NeuralNet here
      */
-    int argNumInputs;
-    int argNumHidden;
-    int argNumOutputs;
-    double[][] weightsInput;
-    double[][] weightsInputDiff;
-    double[][] weightsOutput;
-    double[][] weightsOutputDiff;
-    double[] intermediateOutput;  //Will store the hidden layer outputs for a given input pattern
-    double[] intermediateDelta;   //Will store the delta values of the hidden layer for a given input pattern (considers bias)
-    double[] finalOutput;         //Will store the final outputs for a given input pattern
-    double[] finalDelta;          //Will store the delta values of the output layer for a given input pattern (considers bias)
-    double argLearningRate;
-    double argMomentum;
-    double argA;
-    double argB;
+    public int argNumInputs;
+    public int argNumHidden;
+    public int argNumOutputs;
+    public double[][] weightsInput;
+    public double[][] weightsInputDiff;
+    public double[][] weightsOutput;
+    public double[][] weightsOutputDiff;
+    public double[] intermediateOutput;  //Will store the hidden layer outputs for a given input pattern
+    public double[] intermediateDelta;   //Will store the delta values of the hidden layer for a given input pattern (considers bias)
+    public double[] finalOutput;         //Will store the final outputs for a given input pattern
+    public double[] finalDelta;          //Will store the delta values of the output layer for a given input pattern (considers bias)
+    public double argLearningRate;
+    public double argMomentum;
+    public double argA;
+    public double argB;
 
     /*
      * Constructor Method for the NeuralNet Object

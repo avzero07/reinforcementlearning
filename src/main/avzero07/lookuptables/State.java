@@ -16,6 +16,7 @@ Changelog
 Version 0.0.1
 ---------------
 - Initial implementation
+- Added NN related RL Methods
  */
 
 public class State {

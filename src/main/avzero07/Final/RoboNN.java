@@ -27,6 +27,9 @@ Changelog
 Version 0.0.1
 ---------------
 - Initial implementation.
+- Removed LUT and replaced with NN
+    --  RL methods re-purposed to use NN
+- Implementation works. Convergence against Sample.fire
 */
 
 public class RoboNN extends AdvancedRobot {

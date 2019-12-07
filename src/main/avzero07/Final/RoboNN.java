@@ -6,6 +6,11 @@ import robocode.*;
 import robocode.util.Utils;
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
 
 /**
@@ -54,12 +59,14 @@ public class RoboNN extends AdvancedRobot {
      * 4. My Y Co-ordinate
      *
      * Actions
-     * 1. Move Ahead
-     * 2. Turn Left (back and front)
-     * 3. Move Back
-     * 4. Turn Right (back and front)
+     * 1. Right Forward
+     * 2. Left Forward
+     * 3. Right Back
+     * 4. Left Back
      * 5. Shoot
      * 6. Shoot (Power 2)
+     * 7. Forward
+     * 8. Backward
      * */
     static int d2eLevels = 6;
     static int myEnLevels = 4;
@@ -67,12 +74,6 @@ public class RoboNN extends AdvancedRobot {
     static int numActions = 8;
     static int posXlevels = 4;
     static int posYLevels = 4;
-
-    //Directory Path for Current Battle
-    String pathToBattle = "C:/Users/Akshay/Desktop/Robocode Runtime/";
-    String temp = "C:/Users/Akshay/Desktop/Robocode Runtime/";
-    String loadTemp = "C:/Users/Akshay/Desktop/Robocode Runtime/tmp.txt";
-    String resPath = "C:/Users/Akshay/Desktop/Robocode Runtime/ScoreResult.txt";
 
     //Instantiate State Objects
     State s1;                           //Current State : State before action
@@ -101,7 +102,7 @@ public class RoboNN extends AdvancedRobot {
     static int numOutputNeurons = 1;
 
     static double learningRate = 0.01;
-    static double momentum = 0;
+    static double momentum = 0.5;
 
     static double argA = 0;
     static double argB = 0;
@@ -115,6 +116,27 @@ public class RoboNN extends AdvancedRobot {
     double E = 0;
 
     static NeuralNet nn1 = new NeuralNet(numInputNeurons, numHiddenNeurons, numOutputNeurons, learningRate, momentum, argA, argB);
+
+    //Paths for File Writing
+
+    //Base Path
+    static String resDir = "C:/Users/Akshay/Desktop/Robocode NN Outputs/";
+
+    static Date date = Calendar.getInstance().getTime();
+    static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
+    static String strDate = dateFormat.format(date);
+
+    static String resPath = resDir+strDate+"/";
+
+    //Result String
+    static String res = "Reinforcement Learning Param\n Epsilon (1-e is greedy) = "+epsilon+"\n Gamma = "+gamma
+            +"\nAlpha = "+alpha+"\n\nBackPropagation Param\n Input Neurons = "+numInputNeurons
+            +"\nHidden Neurons = "+numHiddenNeurons
+            +"\nOutput Neurons = "+numOutputNeurons
+            +"\nLearning Rate = "+learningRate
+            +"\nMomentum = "+momentum
+            +"\nActivation = Bipolar Sigmoid\n\n";
+
     /*
      * Run Method for default actions
      * in absence of any other events
@@ -227,6 +249,9 @@ public class RoboNN extends AdvancedRobot {
         }
     }
 
+    /*
+    * Start Event Handlers
+    * */
     @Override
     public void onScannedRobot(ScannedRobotEvent e){
         //double radarTurn = getHeadingRadians() + e.getBearingRadians() - getRadarHeadingRadians();
@@ -254,6 +279,143 @@ public class RoboNN extends AdvancedRobot {
         }
     }
 
+    @Override
+    public void onRoundEnded(RoundEndedEvent e) {
+        roundCount++;
+//        String pathToRoundWeights = pathToBattle+"/Rounds/";
+//        File f = new File(pathToRoundWeights);
+//        f.mkdirs();
+//
+//        try {
+//            lut1.saveWeights(pathToRoundWeights,"Round-"+getRoundNum());
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+
+        out.println("Aggregate Reward = "+aggReward);
+        aggReward = 0;
+
+        double energy = getEnergy();
+        int roundCount = getRoundNum();
+        finalEnergy[(roundCount/100)] = finalEnergy[(roundCount/100)] + energy;
+
+        //Epsilon Decay
+        if(roundCount%500==0 && roundCount!=0  && epsilon>0){
+
+            if(epsilon>0 && epsilon<0.1) epsilon = 0;
+            else epsilon = epsilon - 0.1;
+        }
+
+        //Overfitting Beyond This
+//        if(roundCount>1500 && LEARNING==true)
+//            LEARNING = false;
+    }
+
+    @Override
+    public void onBattleEnded(BattleEndedEvent event) {
+
+        File dir = new File(resPath);
+        dir.mkdirs();
+
+        String pathStringWeights = resPath+"Final Weights/";
+        File dirWeights = new File(pathStringWeights);
+        dirWeights.mkdirs();
+
+        res = res + "Wins\tRemaining Energy\tAggReward\n";
+        for(int i=0;i<wins.length;i++){
+            res = res + wins[i] + "\t" + finalEnergy[i] + "" +
+                    "\t\t\t" + aggRew[i] +"\n";
+        }
+
+        //Writing Files
+        try {
+            writeToFile(resPath+"Stats.txt",res);
+            nn1.saveWeights(pathStringWeights,getNumRounds()+".");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        /*try {
+            lut1.saveWeights(temp,"tmp");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }*/
+    }
+
+    @Override
+    public void onBulletHit(BulletHitEvent event) {
+        if(intermediateRewards){
+            reward = reward + 1;
+        }
+        aggRew[roundCount/100]++;
+    }
+
+    @Override
+    public void onHitByBullet(HitByBulletEvent event) {
+        if(intermediateRewards){
+            reward = reward - 1;
+        }
+        aggRew[roundCount/100]--;
+    }
+
+    @Override
+    public void onDeath(DeathEvent event) {
+        if(terminalRewards){
+            reward = reward -1000;
+        }
+        if(LEARNING){
+            try{
+                if(s2==null){
+                    s3 = s1;
+                    //lut1.qUpdate(s3,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+                    State.qUpdate(nn1,t,learningRate,momentum,s3,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+                }
+                if(s2!=null){
+                    //lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+                    State.qUpdate(nn1,t,learningRate,momentum,s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+                }
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+        reward = 0;
+        aggRew[roundCount/100] = aggRew[roundCount/100] - 1000;
+    }
+
+    @Override
+    public void onWin(WinEvent event) {
+        if(terminalRewards){
+            reward = reward + 1000;
+        }
+        if(LEARNING){
+            try{
+                //lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+                State.qUpdate(nn1,t,learningRate,momentum,s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+        reward = 0;
+        aggRew[roundCount/100] = aggRew[roundCount/100] + 1000;
+        win = true;
+        winCount++;
+
+        int roundCount = getRoundNum();
+        wins[(roundCount/100)]++;
+        //if((roundCount+1)%20==0){
+        //    wins[(roundCount/20)] = wins[(roundCount/20)]/20;
+        //}
+    }
+
+    @Override
+    public void onHitWall(HitWallEvent event) {
+        if(intermediateRewards){
+            reward = reward - 1;
+        }
+        aggRew[roundCount/100]--;
+    }
 
     //Add Event Handlers Above
 
@@ -382,5 +544,13 @@ public class RoboNN extends AdvancedRobot {
     public static int randInt(int lower, int upper){
         Random r = new Random();
         return (r.nextInt((upper-lower)+1)+lower);
+    }
+
+    //Trusty File Writer Method
+    public static void writeToFile(String path, String text) throws IOException {
+        Charset charSet = Charset.forName("US-ASCII");
+        BufferedWriter writer = new BufferedWriter(new FileWriter(path));
+        writer.write(text,0,text.length());
+        writer.close();
     }
 }

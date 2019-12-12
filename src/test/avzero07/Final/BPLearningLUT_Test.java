@@ -1,7 +1,10 @@
 package avzero07.Final;
 
+import avzero07.lookuptables.State;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 public class BPLearningLUT_Test {
 
@@ -17,5 +20,12 @@ public class BPLearningLUT_Test {
         double result  = BPLearningLUT.absScale(testval,min,max,a,b);
         System.out.println(result);
         //Assert.assertEquals(result,0.8,0);
+    }
+
+    @Test
+    public void inpVecTest(){
+        State s = new State(0.5,90,120,45,45);
+        double op[] = State.constructInpVect(s,5);
+        System.out.println(Arrays.toString(op));
     }
 }

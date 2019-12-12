@@ -61,11 +61,11 @@ public class BPLearningLUT {
 
         //Initialize Neural Net
         int numInputNeurons = 13; //5 State Variables and 8 for Action with 1 hot Encoding
-        int numHiddenNeurons = 7;
+        int numHiddenNeurons = 20;
         int numOutputNeurons = 1;
 
         double learningRate = 0.01;
-        double momentum = 0;
+        double momentum = 0.5;
 
         double argA = 0;
         double argB = 0;
@@ -151,14 +151,15 @@ public class BPLearningLUT {
                     }
                 }
             }
-            E = 0.5*E;
+            //RMS Error This Time. Not Total Error
+            E = Math.sqrt(E/(12288));
             //Perfect Condition Stuff
-            if(E<=0.05){
+            /*if(E<=0.05){
                 //System.out.println("Trial Number: "+loop+" Converged at Epoch "+k);
                 String identifier = k+".";
                 nn1.saveWeights(pathStringWeights,identifier);
                 break;
-            }
+            }*/
 
             //End of Epoch Code Goes Here
             String cmdOp = "Epoch "+k+", Error = "+E;

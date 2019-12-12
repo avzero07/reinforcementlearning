@@ -1,6 +1,12 @@
 package avzero07.lookuptables;
 
+import avzero07.Final.Memory;
+import avzero07.Final.ReplayMemory;
 import avzero07.reinforcementlearning.NeuralNet;
+
+import java.lang.reflect.Member;
+import java.util.Iterator;
+import java.util.ListIterator;
 
 /**
  * State Class to track state values.
@@ -235,6 +241,197 @@ public class State {
                 return;
             }
         }
+    }
+
+    //Overload Q Update with Experience Replay. New Param = {ReplayMemory, Batch Size}
+    //Returns RMS Error over Batch Size
+    public static double qUpdate(NeuralNet nn, int actVar, double learningRate, double momentum, State current, State previous, double alpha, double gamma, double reward, int s2Action, int s1Action, boolean ON_POLICY, boolean terminal, ReplayMemory rem, int filled, int batchSize){
+
+        double E = 0;
+
+        double[] inpVecQ = new double[13];
+        //Fill inpVecQ Using State previous and s1Action
+        inpVecQ = State.constructInpVect(previous,s1Action);
+
+
+        double[] inpVecQNew = new double[13];
+        //Fill inpVecQNew using State current and Action s2Action
+        inpVecQNew = State.constructInpVect(current,s2Action);
+
+
+        //Forward Propagate To Assign q and qnew their Values (Remember to Scale Q back)
+        nn.propagateForward(inpVecQ,actVar);
+        double q = absScale(nn.finalOutput[0],-1,1,-1000,1000);
+
+        nn.propagateForward(inpVecQNew,actVar);
+        double qnew = absScale(nn.finalOutput[0],-1,1,-1000,1000);
+        double qup;
+
+        /*
+         * SARSA (On Policy TD)
+         *
+         * Q(S,A) <-- Q(S,A) + alpha*(R + gamma*(Q(S',A'))-Q(S,A))
+         *
+         * */
+
+        if(ON_POLICY==true){
+            if(terminal==true){
+                return 0;
+            }
+            if(terminal==false){
+                qup = q + (alpha*(reward+(gamma*qnew)-q));
+
+                //Fill Replay Memory
+                Memory mem = new Memory(qup,previous,s1Action,reward,current);
+                rem.add(mem);
+
+                double qupAr[] = {absScale(qup,-1000,1000,-1,1)};
+
+                //1 Backpropagation to Update New Q Value
+                nn.propagateForward(inpVecQ,actVar);
+                nn.propagateBackwardOutput(qupAr,actVar);
+                nn.weightUpdateOutput(learningRate,momentum);
+                nn.propagateBackwardHidden(actVar);
+                nn.weightUpdateHidden(learningRate,momentum,inpVecQ);
+                return E;
+            }
+        }
+
+        /*
+         * Q-Learning (Off Policy TD)
+         *
+         * Q(S,A) <-- Q(S,A) + alpha*(R + gamma*max-a(Q(S',A))-Q(S,A))
+         * */
+        if(ON_POLICY==false){
+            if(terminal==true){
+                qnew = 0;
+                qup = q + (alpha*(reward+(gamma*qnew)-q));
+
+                //Fill Replay Memory
+                Memory mem = new Memory(qup,previous,s1Action,reward,current);
+                rem.add(mem);
+
+                double qupAr[] = {absScale(qup,-1000,1000,-1,1)};
+
+                //Execute Experience Replay when batchSize = batch;
+
+                if(filled<batchSize){
+                    //1 Backpropagation to Update New Q Value
+                    nn.propagateForward(inpVecQ,actVar);
+                    nn.propagateBackwardOutput(qupAr,actVar);
+                    nn.weightUpdateOutput(learningRate,momentum);
+                    nn.propagateBackwardHidden(actVar);
+                    nn.weightUpdateHidden(learningRate,momentum,inpVecQ);
+                }
+
+                //Experience Replay
+                if(filled==batchSize){
+                    Iterator<Memory> listIter = rem.iterator();
+
+                    //Loop Across Filled
+                    for(int i = 0; i < filled; i++)
+                    {
+                        Memory temp = listIter.next();
+                        double y[] = new double[] {absScale(temp.qValue,-1000,1000,-1,1)};
+
+                        double inpVec[] = constructInpVect(temp.sT,temp.actionIndexT);
+
+                        nn.propagateForward(inpVec,actVar);
+                        nn.propagateBackwardOutput(y,actVar);
+                        nn.weightUpdateOutput(learningRate,momentum);
+                        nn.propagateBackwardHidden(actVar);
+                        nn.weightUpdateHidden(learningRate,momentum,inpVec);
+
+                        E = E + Math.pow((nn.finalOutput[0] - y[0]),2);
+                    }
+                    E = Math.sqrt(E/((double) filled));
+                }
+                return E;
+            }
+            if(terminal==false){
+                qup = q + (alpha*(reward+(gamma*qnew)-q));
+
+                //Fill Replay Memory
+                Memory mem = new Memory(qup,previous,s1Action,reward,current);
+                rem.add(mem);
+
+
+                double qupAr[] = {absScale(qup,-1000,1000,-1,1)};
+
+                if(filled<batchSize){
+                    //1 Backpropagation to Update New Q Value
+                    //Experience Replay Code Goes Here
+                    nn.propagateForward(inpVecQ,actVar);
+                    nn.propagateBackwardOutput(qupAr,actVar);
+                    nn.weightUpdateOutput(learningRate,momentum);
+                    nn.propagateBackwardHidden(actVar);
+                    nn.weightUpdateHidden(learningRate,momentum,inpVecQ);
+                }
+
+                //Experience Replay
+                if(filled==batchSize){
+                    Iterator<Memory> listIter = rem.iterator();
+
+                    //Loop Across Filled
+                    for(int i = 0; i < filled; i++)
+                    {
+                        Memory temp = listIter.next();
+                        double y[] = new double[] {absScale(temp.qValue,-1000,1000,-1,1)};
+
+                        double inpVec[] = constructInpVect(temp.sT,temp.actionIndexT);
+
+                        nn.propagateForward(inpVec,actVar);
+                        nn.propagateBackwardOutput(y,actVar);
+                        nn.weightUpdateOutput(learningRate,momentum);
+                        nn.propagateBackwardHidden(actVar);
+                        nn.weightUpdateHidden(learningRate,momentum,inpVec);
+
+                        E = E + Math.pow((nn.finalOutput[0] - y[0]),2);
+                    }
+                    E = Math.sqrt(E/((double) filled));
+                }
+                return E;
+            }
+        }
+        return E;
+    }
+
+    /**
+     * Method to construct an input vector to feed the NN
+     * @param s State Object to retrieve state variables
+     * @param actionIndex Appropriate action index which will be one-hot-encoded
+     * @return
+     */
+    public static double[] constructInpVect(State s, int actionIndex){
+
+        double[] inpVecQNew = new double[13];
+
+        double cdi = absScale(s.d2enem,0,1000,-0.8,0.8);
+        double cmeni = absScale(s.myEner,0,100,-0.8,0.8);
+        double ceeni = absScale(s.enEner,0,360,-0.8,0.8);
+        double cexi = absScale(s.ex,0,800,-0.8,0.8);
+        double cyii = absScale(s.yi,0,600,-0.8,0.8);
+
+        switch(actionIndex-1){
+            case 0: inpVecQNew = new double[] {cdi,cmeni,ceeni,cexi,cyii,0.8,-0.8,-0.8,-0.8,-0.8,-0.8,-0.8,-0.8};
+                break;
+            case 1: inpVecQNew = new double[] {cdi,cmeni,ceeni,cexi,cyii,-0.8,0.8,-0.8,-0.8,-0.8,-0.8,-0.8,-0.8};
+                break;
+            case 2: inpVecQNew = new double[] {cdi,cmeni,ceeni,cexi,cyii,-0.8,-0.8,0.8,-0.8,-0.8,-0.8,-0.8,-0.8};
+                break;
+            case 3: inpVecQNew = new double[] {cdi,cmeni,ceeni,cexi,cyii,-0.8,-0.8,-0.8,0.8,-0.8,-0.8,-0.8,-0.8};
+                break;
+            case 4: inpVecQNew = new double[] {cdi,cmeni,ceeni,cexi,cyii,-0.8,-0.8,-0.8,-0.8,0.8,-0.8,-0.8,-0.8};
+                break;
+            case 5: inpVecQNew = new double[] {cdi,cmeni,ceeni,cexi,cyii,-0.8,-0.8,-0.8,-0.8,-0.8,0.8,-0.8,-0.8};
+                break;
+            case 6: inpVecQNew = new double[] {cdi,cmeni,ceeni,cexi,cyii,-0.8,-0.8,-0.8,-0.8,-0.8,-0.8,0.8,-0.8};
+                break;
+            case 7: inpVecQNew = new double[] {cdi,cmeni,ceeni,cexi,cyii,-0.8,-0.8,-0.8,-0.8,-0.8,-0.8,-0.8,0.8};
+                break;
+        }
+
+        return inpVecQNew;
     }
 
     /**

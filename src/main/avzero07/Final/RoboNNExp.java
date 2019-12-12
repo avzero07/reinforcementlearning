@@ -14,8 +14,8 @@ import java.util.Date;
 import java.util.Random;
 
 /**
- * RobotNN Implementation Class.
- * @date 06-December-2019
+ * RobotNNExp Implementation Class.
+ * @date 11-December-2019
  * @author avzero07 (Akshay V)
  * @email "akshay.viswakumar@gmail.com"
  * @version 0.0.1
@@ -26,13 +26,12 @@ Changelog
 ---------------
 Version 0.0.1
 ---------------
-- Initial implementation.
-- Removed LUT and replaced with NN
-    --  RL methods re-purposed to use NN
+- Experience Replay Implemented
+    --  Convergence is Poor at high n
 - Implementation works. Convergence against Sample.fire
 */
 
-public class RoboNN extends AdvancedRobot {
+public class RoboNNExp extends AdvancedRobot {
     /*
      * Start defining global variables
      * */
@@ -42,15 +41,26 @@ public class RoboNN extends AdvancedRobot {
     double reward = 0;       //Tracks the instantaneous reward. Should be reset after update
     double aggReward = 0;    //Tracks the aggregate reward. Resets every episode [round]
 
+    //Instantiate Replay Memory
+    static int memCapacity = 20;
+    static int batch = memCapacity;
+    static int batchSize = Math.min(batch,memCapacity);
+    static int filled = 0; //To track filled capacity of ReplayMemory. Experience Replay starts when filled = memCapacity
+    static ReplayMemory replayMem = new ReplayMemory(memCapacity);
+
     static boolean win = false;
     static int winCount = 0;
     static int aggWinCount = 0;
 
-    //Track Win Rate Per 20 battles
+    //Track Metrics
     static double[] wins = new double[1000];
     static double[] finalEnergy = new double[1000]; //Tracking Damage Taken in a round
     static double[] aggRew = new double[1000];      //Agg reward in a round
     static double[] battleTime = new double[1000];
+    static double[] maxErr = new double[10000];
+    static int maxErrind = 0;
+    static double[] minErr = new double[10000];
+    static int minErrind = 0;
 
     static int roundCount = 0;
 
@@ -98,8 +108,8 @@ public class RoboNN extends AdvancedRobot {
     static boolean terminalRewards = true;      //Used to toggle terminal rewards
 
     /*
-    * Initialize NN Here
-    * */
+     * Initialize NN Here
+     * */
     //Initialize Neural Net
     static int numInputNeurons = 13; //5 State Variables and 8 for Action with 1 hot Encoding
     static int numHiddenNeurons = 7;
@@ -131,6 +141,7 @@ public class RoboNN extends AdvancedRobot {
     static String strDate = dateFormat.format(date);
 
     static String resPath = resDir+strDate+"/";
+    static String resPathErr = resPath+"NN-Errors/";
 
     //Result String
     static String res = "Reinforcement Learning Param\n Epsilon (1-e is greedy) = "+epsilon+"\n Gamma = "+gamma
@@ -139,7 +150,9 @@ public class RoboNN extends AdvancedRobot {
             +"\nOutput Neurons = "+numOutputNeurons
             +"\nLearning Rate = "+learningRate
             +"\nMomentum = "+momentum
-            +"\nActivation = Bipolar Sigmoid\n\n";
+            +"\nActivation = Bipolar Sigmoid\n"
+            +"\nExperience Replay Batch Size = "+batchSize
+            +"\nExperience Replay Batch Capacity = "+memCapacity+"\n\n\n";
 
     /*
      * Run Method for default actions
@@ -239,7 +252,28 @@ public class RoboNN extends AdvancedRobot {
                 if(LEARNING){
                     try{
                         //lut1.qUpdate(s2,s1,alpha,gamma,reward,curMaxAction,chosenAction,false,false);
-                        State.qUpdate(nn1,t,learningRate,momentum,s2,s1,alpha,gamma,reward,curMaxAction,chosenAction,false,false);
+                        double E = State.qUpdate(nn1,t,learningRate,momentum,s2,s1,alpha,gamma,reward,curMaxAction,chosenAction,false,false,replayMem,filled,batchSize);
+                        if(filled<batchSize) filled++;
+                        if(E>(2*maxErr[maxErrind])){
+
+                            if(maxErrind==0)
+                                maxErr[maxErrind] = E;
+
+                            else{
+                                maxErrind++;
+                                maxErr[maxErrind] = E;
+                            }
+                        }
+
+                        if(E<(0.5*minErr[minErrind])){
+
+                            if(minErrind==0)
+                                minErr[minErrind] = E;
+                            else{
+                                minErrind++;
+                                minErr[minErrind] = E;
+                            }
+                        }
                     }
                     catch(Exception e){
                         e.printStackTrace();
@@ -254,8 +288,8 @@ public class RoboNN extends AdvancedRobot {
     }
 
     /*
-    * Start Event Handlers
-    * */
+     * Start Event Handlers
+     * */
     @Override
     public void onScannedRobot(ScannedRobotEvent e){
         //double radarTurn = getHeadingRadians() + e.getBearingRadians() - getRadarHeadingRadians();
@@ -326,16 +360,25 @@ public class RoboNN extends AdvancedRobot {
         File dirWeights = new File(pathStringWeights);
         dirWeights.mkdirs();
 
+        File dirErrors = new File(resPathErr);
+        dirErrors.mkdirs();
+
         res = res + "Wins\tRemaining Energy\tAggReward\tTotal Time\n";
         for(int i=0;i<wins.length;i++){
             res = res + wins[i] + "\t" + finalEnergy[i] + "" +
                     "\t\t\t" + aggRew[i] +"\t"+battleTime[i]+"\n";
         }
 
+        String resErrStat = "Max-Error\tMin-Error\n";
+        for(int i = 0; i < 1000; i++){
+            resErrStat = resErrStat + maxErr[i] + "\t" + minErr[i]+"\n";
+        }
+
         //Writing Files
         try {
             writeToFile(resPath+"Stats.txt",res);
             nn1.saveWeights(pathStringWeights,getNumRounds()+".");
+            writeToFile(resPath+"NN-Err.txt",resErrStat);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -373,11 +416,53 @@ public class RoboNN extends AdvancedRobot {
                 if(s2==null){
                     s3 = s1;
                     //lut1.qUpdate(s3,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
-                    State.qUpdate(nn1,t,learningRate,momentum,s3,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+                    double E = State.qUpdate(nn1,t,learningRate,momentum,s3,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true,replayMem,filled,batchSize);
+                    if(filled<batchSize) filled++;
+                    if(E>(2*maxErr[maxErrind])){
+
+                        if(maxErrind==0)
+                            maxErr[maxErrind] = E;
+
+                        else{
+                            maxErrind++;
+                            maxErr[maxErrind] = E;
+                        }
+                    }
+
+                    if(E<(2*minErr[minErrind])){
+
+                        if(minErrind==0)
+                            minErr[minErrind] = E;
+                        else{
+                            minErrind++;
+                            minErr[minErrind] = E;
+                        }
+                    }
                 }
                 if(s2!=null){
                     //lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
-                    State.qUpdate(nn1,t,learningRate,momentum,s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+                    double E = State.qUpdate(nn1,t,learningRate,momentum,s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true,replayMem,filled,batchSize);
+                    if(filled<batchSize) filled++;
+                    if(E>(2*maxErr[maxErrind])){
+
+                        if(maxErrind==0)
+                            maxErr[maxErrind] = E;
+
+                        else{
+                            maxErrind++;
+                            maxErr[maxErrind] = E;
+                        }
+                    }
+
+                    if(E<(2*minErr[minErrind])){
+
+                        if(minErrind==0)
+                            minErr[minErrind] = E;
+                        else{
+                            minErrind++;
+                            minErr[minErrind] = E;
+                        }
+                    }
                 }
             }
             catch(Exception e){
@@ -396,7 +481,28 @@ public class RoboNN extends AdvancedRobot {
         if(LEARNING){
             try{
                 //lut1.qUpdate(s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
-                State.qUpdate(nn1,t,learningRate,momentum,s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true);
+                double E = State.qUpdate(nn1,t,learningRate,momentum,s2,s1,alpha,gamma,reward,0,chosenAction,ON_POLICY,true,replayMem,filled,batchSize);
+                if(filled<batchSize) filled++;
+                if(E>(2*maxErr[maxErrind])){
+
+                    if(maxErrind==0)
+                        maxErr[maxErrind] = E;
+
+                    else{
+                        maxErrind++;
+                        maxErr[maxErrind] = E;
+                    }
+                }
+
+                if(E<(2*minErr[minErrind])){
+
+                    if(minErrind==0)
+                        minErr[minErrind] = E;
+                    else{
+                        minErrind++;
+                        minErr[minErrind] = E;
+                    }
+                }
             }
             catch(Exception e){
                 e.printStackTrace();
@@ -559,3 +665,4 @@ public class RoboNN extends AdvancedRobot {
         writer.close();
     }
 }
+

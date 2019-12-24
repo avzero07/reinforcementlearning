@@ -25,19 +25,27 @@ The goal of Phase 1 is to develop methods that can be used to deploy a 3 layer A
 ## Phase 2
 The goal of Phase 2 is to develop methods that can be used to implement the Temporal Difference Algorithm (TD) using Look Up Tables (LUT). This will then be used to train a custom robot tank in RoboCode.
 ### Reinforcement Learning : The Temporal Difference Algorithm
-#### Status : In Progress
+#### Status : Complete
 #### Milestones
-- Understand the TD Algorithm
+- Understand the Q Learning algorithm
 - Create a high level design for the implementation
     - LUT Interface        : Extends the CommonInterface and specifies baseline methods to be used in all LUTs
     - LUT Class            : Implementes the LUT Interface
 - Develop methods to implement the Temporal Difference algorithm
-- Develop unit tests
-- Develop methods
 - Build a cusom Robot Tank in Robocode
-    - Use methods to implement TD and train the custom robot against an enemy tank
+    - Use methods to implement Q Learning and train the custom robot against an enemy tank
+    - Best win rate 65%
 
 ## Phase 3
 The goal of Phase 3 is to make use of the results of Phase 1 and Phase 2 in an effort to make the custom Robot "intelligent". That is, incorporate Error Backpropagation in the TD algorithm.
 ### Putting it all together
-#### Status : Pending Phase 2 Completion
+#### Status : Complete
+#### Milestones
+- Replace the LUT from Phase 2 with a Multilayer NN using modules developed in Phase 1
+    - Use LUT from best case in Phase 2 to train NN and determine architecture
+- Overload Q Learning methods to make use of NN
+- Train Robot tank against Sample.Fire.
+    - Win rate upto 90%
+
+## Phase 4
+Code cleanup and housekeeping.

@@ -46,6 +46,8 @@ The goal of Phase 3 is to make use of the results of Phase 1 and Phase 2 in an e
 - Overload Q Learning methods to make use of NN
 - Train Robot tank against Sample.Fire.
     - Win rate upto 90%
+- Develop functions for Experience Replay
+    - Create Memory object (circular queue of abstract State datatype)
 
 ## Phase 4
 Code cleanup and housekeeping.
